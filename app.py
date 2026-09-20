@@ -55,6 +55,14 @@ def index():
 @app.route('/api/all')
 def api_all():
     return jsonify({"fixture": FIXTURE, "h2h": H2H, "players": PLAYERS, "predictions": PREDICTIONS, "ai_bets": AI_BETS})
-
+@app.route('/match')
+def match_detail():
+    league = request.args.get('league', 'Germany Bundesliga')
+    # This opens your AI page you built - from screenshot 1
+    FIXTURE = {"home": "Paderborn", "away": "TSG Hoffenheim", "score": "2-0", "minute": "50:27", "league": league}
+    H2H = {"win_pct": {"home": 33, "away": 67}, "boxes": {"matches": 6, "avg_goals": 1.5, "btts_pct": 17, "over_25_pct": 17, "avg_corners": 10.3, "avg_cards": 2}, "matches": []}
+    total_goals, btts, corners, ai_bets = ai_calculate_prob(H2H)
+    PREDICTIONS = {"full_time": {"home": 38.5, "draw": 22.4, "away": 39.1}, "double_chance": {"1X": 60.9, "12": 77.6, "X2": 61.5}, "total_goals": total_goals, "btts": btts, "corners": corners}
+    return render_template('match.html', fixture=FIXTURE, h2h=H2H, pred=PREDICTIONS, ai_bets=ai_bets)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
