@@ -1,97 +1,66 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#0e1625;color:#cbd5e1;font-family:sans-serif;font-size:12px}
-.top{background:#1a2538;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:6px}
-.tabs{display:flex;gap:18px;padding:10px 12px;background:#1a2538;border-bottom:1px solid #2a3a56}.tab{color:#8da0bf;padding-bottom:4px;cursor:pointer;font-weight:600}.tab.active{color:#fff;border-bottom:3px solid #22c55e}
-.subs{display:flex;gap:14px;padding:10px 12px;background:#1f2e4a;overflow:auto;white-space:nowrap}.sub{color:#8da0bf;cursor:pointer;padding-bottom:4px}.sub.active{color:#fff;border-bottom:2px solid #22c55e;font-weight:700}
-.box{background:#1e2d4a}.row{display:grid;grid-template-columns:60px 1fr 60px;padding:12px;border-bottom:1px solid #23324e;text-align:center;align-items:center}.val{font-weight:800;color:#fff;font-size:14px}.mid{font-size:9px;color:#8da0bf;text-transform:uppercase}
-.lab{background:#0f172a;padding:8px;text-align:center;font-weight:800;color:#fff;margin-top:6px}
-.oddsrow{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #1f2e4a;background:#1e2d4a}.obook{font-size:10px;color:#8da0bf}.oval{font-weight:800;color:#22c55e}
-.predbox{background:#1e2d4a;padding:12px;border-bottom:1px solid #1f2e4a}.ptit{font-size:10px;color:#8da0bf}.pval{font-size:14px;font-weight:800;color:#fff;margin-top:4px}.bar{height:6px;background:#2a3a56;border-radius:3px;margin-top:6px;overflow:hidden}.fill{height:100%;background:#22c55e}
-.hide{display:none}
-</style></head><body>
-<div class="top"><a href="/league/{{lg.lid}}" style="color:#22c55e;text-decoration:none"> <- Back</a><div style="color:#8da0bf;margin-top:6px;font-size:11px">Sun 20th 14:00 🏆 {{lg.n}}</div><div class="m">{{game}}</div></div>
-
-<div class="tabs">
-<div class="tab" id="t-create" onclick="showTop('create')">Create</div>
-<div class="tab active" id="t-stats" onclick="showTop('stats')">Stats</div>
-<div class="tab" id="t-odds" onclick="showTop('odds')">Odds</div>
-<div class="tab" id="t-pred" onclick="showTop('pred')">Predictions</div>
-</div>
-
-<div id="content-stats">
-<div class="subs">
-<div class="sub active" id="s-general" onclick="showS('general')">General</div>
-<div class="sub" id="s-goals" onclick="showS('goals')">Goals</div>
-<div class="sub" id="s-corners" onclick="showS('corners')">Corners</div>
-<div class="sub" id="s-cards" onclick="showS('cards')">Cards</div>
-</div>
-
-<div id="tab-general"><div class="box">
-<div class="row"><div class="val">16</div><div class="mid">LEAGUE POS.</div><div class="val">9</div></div>
-<div class="row"><div class="val">2</div><div class="mid">PLAYED</div><div class="val">2</div></div>
-<div class="row"><div class="val">50%</div><div class="mid">WIN %</div><div class="val">50%</div></div>
-<div class="row"><div class="val">3</div><div class="mid">POINTS</div><div class="val">4</div></div>
-<div class="row"><div class="val">29.00</div><div class="mid">SHOTS (AVG)</div><div class="val">35.50</div></div>
-</div><div class="lab">Total Goals %</div><div class="box"><div class="row"><div class="val">100%</div><div class="mid">+0.5 GOALS %</div><div class="val">100%</div></div><div class="row"><div class="val">100%</div><div class="mid">+2.5 GOALS %</div><div class="val">100%</div></div><div class="row"><div class="val">0%</div><div class="mid">BTTS %</div><div class="val">100%</div></div></div><div class="lab">Corners</div><div class="box"><div class="row"><div class="val">12.00</div><div class="mid">TOTAL CORNERS PG</div><div class="val">9.00</div></div><div class="row"><div class="val">11</div><div class="mid">FOR TOTAL</div><div class="val">7</div></div></div></div>
-
-<div id="tab-goals" class="hide"><div class="box"><div class="row"><div class="val">4.00</div><div class="mid">AVG GOALS</div><div class="val">1.00</div></div><div class="row"><div class="val">4</div><div class="mid">SCORED</div><div class="val">1</div></div><div class="row"><div class="val">0</div><div class="mid">CONCEDED</div><div class="val">3</div></div></div><div class="lab">Outcome %</div><div class="box"><div class="row"><div class="val">0%</div><div class="mid">FAILED TO SCORE</div><div class="val">0%</div></div><div class="row"><div class="val">100%</div><div class="mid">CLEAN SHEET %</div><div class="val">0%</div></div></div></div>
-
-<div id="tab-corners" class="hide"><div class="box"><div class="row"><div class="val">12.00</div><div class="mid">TOTAL CORNERS PG</div><div class="val">9.00</div></div><div class="row"><div class="val">11</div><div class="mid">FOR TOTAL</div><div class="val">7</div></div><div class="row"><div class="val">11.00</div><div class="mid">FOR PG</div><div class="val">7.00</div></div><div class="row"><div class="val">1.00</div><div class="mid">AGAINST PG</div><div class="val">2.00</div></div></div><div class="lab">1H Total</div><div class="box"><div class="row"><div class="val">5.00</div><div class="mid">AVG 1H</div><div class="val">4.00</div></div></div><div class="lab">2H Total</div><div class="box"><div class="row"><div class="val">7.00</div><div class="mid">AVG 2H</div><div class="val">5.00</div></div></div></div>
-
-<div id="tab-cards" class="hide"><div class="lab">2H Cards</div><div class="box"><div class="row"><div class="val">3.00</div><div class="mid">AVG 2H CARDS</div><div class="val">0.00</div></div><div class="row"><div class="val">2.00</div><div class="mid">AVG RECIEVED 2H</div><div class="val">0.00</div></div><div class="row"><div class="val">1.00</div><div class="mid">AVG OPPONENT 2H</div><div class="val">0.00</div></div></div></div>
-</div>
-
-<div id="content-odds" class="hide">
-<div class="lab">1X2 - Match Winner</div>
-<div class="box">
-<div class="oddsrow"><div><div style="font-weight:700;color:#fff">Lyon</div><div class="obook">Bet365 • 1XBet</div></div><div class="oval">2.15</div></div>
-<div class="oddsrow"><div><div style="font-weight:700;color:#fff">Draw</div><div class="obook">Bet365 • 1XBet</div></div><div class="oval">3.40</div></div>
-<div class="oddsrow"><div><div style="font-weight:700;color:#fff">Brest</div><div class="obook">Bet365 • 1XBet</div></div><div class="oval">3.10</div></div>
-</div>
-<div class="lab">Over/Under 2.5 Goals</div>
-<div class="box">
-<div class="oddsrow"><div>Over 2.5</div><div class="oval">1.85</div></div>
-<div class="oddsrow"><div>Under 2.5</div><div class="oval">1.95</div></div>
-</div>
-<div class="lab">BTTS</div>
-<div class="box">
-<div class="oddsrow"><div>Yes</div><div class="oval">1.75</div></div>
-<div class="oddsrow"><div>No</div><div class="oval">2.05</div></div>
+<!-- PLAYERS TAB - EVERYTHING OPEN -->
+<div id="tab-players">
+<div class="pfilter">
+<div class="pdrop" onclick="toggleMenu('m1')">📊 <span id="cat">Goals</span> ▾
+<div id="m1" class="pmenu">
+<div class="pcat">MATCH OUTCOMES</div>
+<div class="pitem" onclick="pick('Appearances')">Appearances</div>
+<div class="pitem" onclick="pick('Total Minutes')">Total Minutes</div>
+<div class="pitem" onclick="pick('Wins')">Wins</div>
+<div class="pitem" onclick="pick('Draws')">Draws</div>
+<div class="pitem" onclick="pick('Losses')">Losses</div>
+<div class="pitem" onclick="pick('Win Rate')">Win Rate</div>
+<div class="pitem" onclick="pick('Points')">Points</div>
+<div class="pitem" onclick="pick('Points / Game')">Points / Game</div>
+<div class="pitem" onclick="pick('Clean Sheets')">Clean Sheets</div>
+<div class="pitem" onclick="pick('Avg Rating')">Avg Rating</div>
+<div class="pcat">ATTACKING</div>
+<div class="pitem" onclick="pick('Goals')">Goals</div>
+<div class="pitem" onclick="pick('Goals / Game')">Goals / Game</div>
+<div class="pitem" onclick="pick('Assists')">Assists</div>
+<div class="pitem" onclick="pick('Assists / Game')">Assists / Game</div>
+<div class="pcat">SHOOTING</div>
+<div class="pitem" onclick="pick('Shots')">Shots</div>
+<div class="pitem" onclick="pick('Shots / Game')">Shots / Game</div>
+<div class="pitem" onclick="pick('Shots On Target')">Shots On Target</div>
+<div class="pitem" onclick="pick('SoT / Game')">SoT / Game</div>
+<div class="pitem" onclick="pick('Shots Off Target')">Shots Off Target</div>
+<div class="pcat">PASSING</div>
+<div class="pitem" onclick="pick('Passes')">Passes</div>
+<div class="pitem" onclick="pick('Pass Accuracy')">Pass Accuracy</div>
+<div class="pitem" onclick="pick('Key Passes')">Key Passes</div>
+<div class="pitem" onclick="pick('Big Chances Created')">Big Chances Created</div>
+<div class="pcat">DEFENSIVE</div>
+<div class="pitem" onclick="pick('Tackles')">Tackles</div>
+<div class="pitem" onclick="pick('Tackles / Game')">Tackles / Game</div>
+<div class="pitem" onclick="pick('Interceptions')">Interceptions</div>
+<div class="pitem" onclick="pick('Interceptions / Game')">Interceptions / Game</div>
+<div class="pitem" onclick="pick('Blocks')">Blocks</div>
+<div class="pitem" onclick="pick('Blocks / Game')">Blocks / Game</div>
+<div class="pitem" onclick="pick('Clearances')">Clearances</div>
+<div class="pitem" onclick="pick('Duels')">Duels</div>
+<div class="pitem" onclick="pick('Duels Won')">Duels Won</div>
+<div class="pitem" onclick="pick('Aerials Won')">Aerials Won</div>
+<div class="pcat">DISCIPLINE</div>
+<div class="pitem" onclick="pick('Fouls')">Fouls</div>
+<div class="pitem" onclick="pick('Fouls / Game')">Fouls / Game</div>
+<div class="pitem" onclick="pick('Fouls Drawn')">Fouls Drawn</div>
+<div class="pitem" onclick="pick('Fouls Drawn / Game')">Fouls Drawn / Game</div>
+<div class="pitem" onclick="pick('Yellow Cards')">Yellow Cards</div>
+<div class="pitem" onclick="pick('Yellows / Game')">Yellows / Game</div>
+<div class="pitem" onclick="pick('Red Cards')">Red Cards</div>
 </div>
 </div>
-
-<div id="content-pred" class="hide">
-<div class="lab">ABED PREDICT WORLD MODEL</div>
-<div class="predbox"><div class="ptit">HOME WIN PROBABILITY</div><div class="pval">48% - Lyon</div><div class="bar"><div class="fill" style="width:48%"></div></div></div>
-<div class="predbox"><div class="ptit">DRAW PROBABILITY</div><div class="pval">27%</div><div class="bar"><div class="fill" style="width:27%;background:#3b82f6"></div></div></div>
-<div class="predbox"><div class="ptit">AWAY WIN PROBABILITY</div><div class="pval">25% - Brest</div><div class="bar"><div class="fill" style="width:25%;background:#ef4444"></div></div></div>
-<div class="predbox"><div class="ptit">OVER 2.5 GOALS</div><div class="pval">62% - YES (Value)</div><div class="bar"><div class="fill" style="width:62%"></div></div></div>
-<div class="predbox"><div class="ptit">BTTS</div><div class="pval">58% - YES</div><div class="bar"><div class="fill" style="width:58%;background:#f59e0b"></div></div></div>
-<div class="predbox"><div class="ptit">PREDICTED SCORE</div><div class="pval" style="font-size:20px">2 - 1</div><div class="ptit" style="margin-top:4px">Model expects tight game, corners 9.5+</div></div>
-<div class="predbox" style="text-align:center;background:#132a21;border:1px solid #22c55e;border-radius:12px;margin:12px"><div class="pval" style="color:#22c55e">🔒 BEST BET: Over 2.5 + BTTS @ 2.10</div></div>
+<div class="pdrop" onclick="toggleMenu('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Season 24/25</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Last 5 Games</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Last 10 Games</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Home Only</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Away Only</div></div></div>
 </div>
-
-<div id="content-create" class="hide">
-<div class="lab">Create Your Bet Builder</div>
-<div class="box" style="padding:16px;text-align:center;color:#8da0bf">Add filters from Stats to build custom alert<br><br><div style="background:#22c55e;color:#000;padding:10px;border-radius:8px;font-weight:800">Create Alert 🔔</div></div>
+<input class="searchbox" placeholder="🔍 Search stats... (e.g. Goals, Tackles, Fouls)" onkeyup="filterP(this.value)" id="sbox">
+<div style="display:flex;justify-content:space-between;padding:8px 12px;color:#8da0bf;font-size:10px;font-weight:700"><div># PLAYER</div><div>STAT</div></div>
+<div id="plist">
+<div class="prow" data-name="Gouiri Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">G</div><div><div style="color:#fff;font-weight:700">A. Gouiri</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">4</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
+<div class="prow" data-name="Torres Garcia PSG"><div class="pname"><div class="av" style="background:#8b1a1a">T</div><div><div style="color:#fff;font-weight:700">F. Torres Garcia</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">3</div><div class="sbar"><div class="sfill" style="width:75%"></div></div></div></div>
+<div class="prow" data-name="Aoas Correa PSG"><div class="pname"><div class="av" style="background:#8b1a1a">A</div><div><div style="color:#fff;font-weight:700">M. Aoás Corrêa</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
+<div class="prow" data-name="Hikram Abdallah Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">H</div><div><div style="color:#fff;font-weight:700">K. Hikram Abdallah</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
+<div class="prow" data-name="Hojbjerg Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">H</div><div><div style="color:#fff;font-weight:700">P. Højbjerg</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
+<div class="prow" data-name="Machado Ferreira PSG"><div class="pname"><div class="av" style="background:#8b1a1a">M</div><div><div style="color:#fff;font-weight:700">V. Machado Ferreira</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
 </div>
-
-<div style="height:80px"></div>
-<script>
-function showS(n){
- document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));
- document.getElementById('tab-'+n).classList.remove('hide');
- document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));
- document.getElementById('s-'+n).classList.add('active');
-}
-function showTop(n){
- document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
- document.getElementById('t-'+n).classList.add('active');
- document.getElementById('content-stats').classList.add('hide');
- document.getElementById('content-odds').classList.add('hide');
- document.getElementById('content-pred').classList.add('hide');
- document.getElementById('content-create').classList.add('hide');
- document.getElementById('content-'+n).classList.remove('hide');
-}
-</script>
-</body></html>
+</div>
