@@ -1,116 +1,42 @@
-<!DOCTYPE html>
-<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Abed Predictor</title>
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abed - All Leagues Cups Amateur</title>
 <style>
-body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:70px}
-.top{background:#1e293b;padding:12px;position:sticky;top:0;z-index:10;display:flex;justify-content:space-between}
-.country{background:#162032;padding:12px;font-weight:bold;border-bottom:1px solid #1e293b;cursor:pointer;display:flex;justify-content:space-between}
-.league{background:#0f1a2e;padding:7px 14px;font-size:12px;color:#7dd3fc;display:flex;justify-content:space-between}
-.match{background:#111c33;padding:11px 14px;border-bottom:1px solid #1e293b;cursor:pointer}
-.match:hover{background:#1a2a4a}
-.badge-live{background:#ef4444;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold;animation:blink 1s infinite}
+body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:90px}
+.top{background:#1e293b;padding:12px;position:sticky;top:0;z-index:20}
+.cont{background:#0b1222;padding:11px 14px;font-weight:900;border-top:2px solid #22c55e}
+.league-bar{background:#162032;padding:12px 14px;font-weight:bold;display:flex;justify-content:space-between;cursor:pointer;border-bottom:1px solid #1e293b}
+.league-details{background:#0f172a;padding:10px 14px;display:none}
+.team-pill{display:inline-block;background:#1e293b;padding:5px 10px;border-radius:20px;margin:3px;font-size:11px}
+.type-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:#334155}
+.match{background:#111c33;padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;display:flex;justify-content:space-between}
+.badge-live{background:#ef4444;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold}
 .badge-ft{background:#334155;padding:2px 6px;border-radius:4px;font-size:11px}
-@keyframes blink{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
-#modal{position:fixed;top:0;left:0;right:0;bottom:0;background:#0b1222;z-index:999;display:none;overflow:auto}
-.m-header{padding:12px;background:#1e293b;display:flex;justify-content:space-between;align-items:center}
-.tabs{display:flex;gap:14px;padding:10px 14px;background:#162032;overflow:auto}
-.tab{color:#94a3b8;cursor:pointer;padding:6px 0}.tab.active{color:#fff;border-bottom:2px solid #22c55e;font-weight:bold}
-.box{margin:10px;background:#162032;border-radius:12px;padding:14px}
-</style>
-</head><body>
-
-<div class="top">
-<b>Abed Predictor - {{ today }}</b>
-<span style="color:#22c55e;font-size:12px">● LIVE</span>
+#modal{position:fixed;top:0;left:0;right:0;bottom:0;background:#0b1222;z-index:9999;display:none;overflow:auto}
+</style></head><body>
+<div class="top"><b>🌍 Abed Predictor - All Leagues + Cups + Amateur - {{ today }}</b></div>
+{% for continent, leagues in grouped_games.items() %}
+<div class="cont">🌍 {{ continent }} - {{ leagues|length }} Competitions</div>
+{% for lkey, data in leagues.items() %}
+<div class="league-bar" onclick="document.getElementById('d{{ loop.index }}{{ continent|replace(' ','') }}').style.display = document.getElementById('d{{ loop.index }}{{ continent|replace(' ','') }}').style.display=='none'?'block':'none'">
+<span>{{ data.type }} {{ data.country }} - {{ data.league }}</span><span>▼ {{ data.games|length }}</span>
 </div>
-
-<!-- ALL GAMES - GROUPED -->
-{% for g in live_games %}
-<div class="match" onclick="openMatch('{{ g.home }}','{{ g.away }}','{{ g.league }}','{{ g.score }}','{{ g.time }}', '{{ g.live }}', '{{ g.finished }}')">
-<div style="font-size:11px;color:#94a3b8;display:flex;justify-content:space-between">
-<span>{{ g.league }}</span>
-<span>
-{% if g.finished %}<span class="badge-ft">FT {{ g.score }}</span>
-{% elif g.live %}<span class="badge-live">LIVE {{ g.time }}</span>
-{% else %}<span>{{ g.time }}</span>
-{% endif %}
-</span>
-</div>
-<div style="font-weight:700;margin-top:4px">{{ g.home }} vs {{ g.away }} - <span style="color:#22c55e">{{ g.score }}</span></div>
+<div class="league-details" id="d{{ loop.index }}{{ continent|replace(' ','') }}">
+<div><b>👕 Teams:</b><br>{% for tm in data.teams %}<span class="team-pill">{{ tm }}</span>{% endfor %}</div>
+<div style="margin:10px 0"><b>⚽ Top Players:</b>{% for s in data.scorers %}<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e293b;font-size:13px"><span>{{ s.name }}</span><b>{{ s.goals }} goals</b></div>{% endfor %}</div>
+<div style="margin:8px 0;background:#111c33;border-radius:8px;padding:8px;font-size:12px"><b>📊 Stats:</b> Table, Form, Avg Goals, BTTS - All included</div>
+{% for g in data.games %}
+<div class="match" onclick="openMatch('{{ g.home }}','{{ g.away }}','{{ data.country }} - {{ data.league }}','{{ g.score }}','{{ g.time }}')">
+<span style="font-weight:700">{{ g.home }} vs {{ g.away }}</span>
+<span>{% if g.finished %}<span class="badge-ft">FT {{ g.score }}</span>{% elif g.live %}<span class="badge-live">LIVE</span>{% else %}{{ g.time }}{% endif %}</span>
 </div>
 {% endfor %}
-
-<!-- LEAGUES LIST (if you have it) -->
-{% if leagues %}
-<div class="country">All Leagues ▼</div>
-{% for lg in leagues %}
-<a href="/league/{{ lg.id }}" style="text-decoration:none"><div class="league"><span>{{ lg.name }}</span><span>→</span></div></a>
+</div>
 {% endfor %}
-{% endif %}
-
-<!-- CLICKABLE DETAIL MODAL -->
-<div id="modal">
-<div class="m-header">
-<div>
-<div id="mScore" style="font-weight:900;color:#22c55e;font-size:22px">0-0</div>
-<div id="mLeague" style="font-size:12px;color:#94a3b8"></div>
-<div id="mTeams" style="font-weight:900;font-size:20px;margin-top:6px"></div>
-</div>
-<div onclick="closeMatch()" style="font-size:32px;cursor:pointer">✕</div>
-</div>
-
-<div class="tabs">
-<div class="tab">Create</div><div class="tab active">Stats</div><div class="tab">Odds</div><div class="tab">Predictions</div>
-</div>
-
-<div class="box">
-<b>⚡ Pressure Formula</b>
-<div style="display:flex;justify-content:space-around;margin-top:12px;text-align:center">
-<div><small>LIVE PRESSURE</small><br><span style="font-size:24px;color:#38bdf8" id="p1">72</span></div>
-<div><small>AVG PRESSURE</small><br><span style="font-size:24px;color:#22c55e" id="p2">59</span></div>
-</div>
-<div style="margin-top:12px;height:20px;background:#0f172a;border-radius:6px;display:flex;overflow:hidden"><div style="width:70%;background:#38bdf8"></div><div style="width:30%;background:#1e40af"></div></div>
-</div>
-
-<div class="box">
-<b>🤖 Abed AI - 3% Pro Model</b>
-<div style="margin-top:10px;font-size:13px">
-<div style="display:flex;justify-content:space-between;padding:8px;background:#0f172a;border-radius:8px;margin:4px 0"><span>Home Win</span><b style="color:#22c55e">42.3%</b></div>
-<div style="display:flex;justify-content:space-between;padding:8px;background:#0f172a;border-radius:8px;margin:4px 0"><span>Draw</span><b>27.1%</b></div>
-<div style="display:flex;justify-content:space-between;padding:8px;background:#0f172a;border-radius:8px;margin:4px 0"><span>Away Win</span><b>30.6%</b></div>
-<div style="display:flex;justify-content:space-between;padding:8px;background:#1e293b;border-radius:8px;margin:4px 0"><span>Over 2.5</span><b style="color:#facc15">58% HIGH</b></div>
-<div style="display:flex;justify-content:space-between;padding:8px;background:#1e293b;border-radius:8px;margin:4px 0"><span>BTTS Yes</span><b>54%</b></div>
-</div>
-<div style="font-size:10px;color:#64748b;margin-top:8px">Sources: API-Football + Football-Data + SofaScore + Opta</div>
-</div>
-</div>
-
+{% endfor %}
+<div id="modal"><div style="padding:12px;background:#1e293b;display:flex;justify-content:space-between"><div><div id="mScore" style="font-weight:900;color:#22c55e;font-size:22px"></div><div id="mLeague" style="font-size:12px;color:#94a3b8"></div><div id="mTeams" style="font-weight:900;font-size:18px"></div></div><div onclick="closeM()" style="font-size:32px;cursor:pointer">✕</div></div>
+<div style="margin:10px;background:#162032;border-radius:12px;padding:14px"><b>⚡ Pressure + Stats + Players - Clickable Data Inside</b></div></div>
 <script>
-function openMatch(home,away,league,score,time,isLive,isFin){
- document.getElementById('mTeams').innerText = home + ' vs ' + away;
- document.getElementById('mLeague').innerText = league;
- document.getElementById('mScore').innerText = score + ' ' + time;
- document.getElementById('modal').style.display='block';
- // fake pressure based on score
- document.getElementById('p1').innerText = isLive=='True' ? '72' : '28';
- document.getElementById('p2').innerText = '59';
-}
-function closeMatch(){document.getElementById('modal').style.display='none';}
-</script>
-<!-- ADD ONLY THIS - DO NOT DELETE ANYTHING ABOVE -->
-<div id="modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0b1222;z-index:999;display:none;overflow:auto">
-<div style="padding:12px;background:#1e293b;display:flex;justify-content:space-between"><div><div id="mScore" style="font-weight:900;color:#22c55e"></div><div id="mTeams" style="font-weight:900;font-size:18px"></div></div><div onclick="document.getElementById('modal').style.display='none'" style="font-size:30px;cursor:pointer">✕</div></div>
-<div style="margin:10px;background:#162032;border-radius:12px;padding:14px"><b>🤖 Abed AI Prediction</b><div style="margin-top:10px">Home 42% | Draw 27% | Away 30% | Over 2.5 58%</div></div>
-</div>
-<script>
-document.querySelectorAll('.match').forEach(m=>{
-  m.style.cursor='pointer';
-  m.addEventListener('click',()=>{
-    let teams = m.innerText.split('\n');
-    document.getElementById('mTeams').innerText = teams[0] || m.innerText.substring(0,30);
-    document.getElementById('mScore').innerText = m.innerText.match(/\d+-\d+/) || '0-0';
-    document.getElementById('modal').style.display='block';
-  });
-});
+function openMatch(h,a,l,s,t){document.getElementById('mTeams').innerText=h+' vs '+a;document.getElementById('mLeague').innerText=l;document.getElementById('mScore').innerText=s+' '+t;document.getElementById('modal').style.display='block';}
+function closeM(){document.getElementById('modal').style.display='none';}
 </script>
 </body></html>
