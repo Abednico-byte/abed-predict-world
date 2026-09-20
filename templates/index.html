@@ -38,6 +38,19 @@ body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:90p
 <script>
 function openMatch(h,a,l,s,t){document.getElementById('mTeams').innerText=h+' vs '+a;document.getElementById('mLeague').innerText=l;document.getElementById('mScore').innerText=s+' '+t;document.getElementById('modal').style.display='block';}
 function closeM(){document.getElementById('modal').style.display='none';}
+function openTeam(team, league){
+  document.getElementById('mTeams').innerText = team;
+  document.getElementById('mLeague').innerText = league + ' - Squad & Form';
+  document.getElementById('mScore').innerText = '👕 ' + team + ' - 5W 2D 1L';
+  document.getElementById('modal').style.display='block';
+}
+function openPlayer(name, goals){
+  document.getElementById('mTeams').innerText = name;
+  document.getElementById('mLeague').innerText = 'Top Scorer Stats';
+  document.getElementById('mScore').innerText = goals + ' Goals - 24 Apps';
+  document.getElementById('modal').style.display='block';
+}
+<div onclick="openPlayer('{{ s.name }}','{{ s.goals }}')" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px;cursor:pointer"><span>{{ s.name }} ↗</span><b>{{ s.goals }} goals</b></div>  
 </script>
-  <div onclick="openPlayer('{{ s.name }}','{{ s.goals }}')" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px;cursor:pointer"><span>{{ s.name }} ↗</span><b>{{ s.goals }} goals</b></div>
+  
 </body></html>
