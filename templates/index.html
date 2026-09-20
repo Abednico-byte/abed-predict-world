@@ -1,11 +1,57 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{background:#0e1a2f;color:#fff;font-family:sans-serif;margin:0}
-.top{padding:16px;background:#132040;font-size:20px;font-weight:800}
-.row{display:block;padding:16px;background:#1a2c4a;border-bottom:1px solid #1e3354;color:#fff;text-decoration:none}
-.row:hover{background:#223a5e}
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{background:#080e1e;color:#fff;font-family:Inter,Arial;margin:0}
+.header{background:linear-gradient(90deg,#0ea5e9,#6366f1);padding:18px;text-align:center;font-weight:900;font-size:22px;letter-spacing:1px}
+.sub{color:#94a3b8;text-align:center;padding:8px;font-size:12px}
+.card{margin:12px;background:#111c33;border-radius:14px;overflow:hidden;border:1px solid #1e3a5f}
+.card-head{background:#162040;padding:10px 14px;font-weight:bold;color:#7dd3fc;display:flex;justify-content:space-between}
+.match{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b}
+.match:last-child{border:0}
+.team{font-weight:600}
+.time{font-size:12px;color:#94a3b8}
+.score-box{min-width:70px;text-align:right}
+.score{font-weight:900;background:#0f172a;padding:6px 10px;border-radius:8px}
+.live-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite;margin-right:4px}
+@keyframes pulse{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+.live{color:#ef4444;font-weight:900;font-size:12px}
+.league-link{display:block;margin:10px 12px;padding:14px;background:#1e293b;border-radius:10px;color:#fff;text-decoration:none;text-align:center;font-weight:bold}
 </style></head><body>
-<div class="top">Abed Predict World - Leagues</div>
-{% for lg in leagues %}
-<a class="row" href="/league/{{ lg.id }}">{{ lg.n }} ›</a>
+<div class="header">⚽ ABED PREDICT WORLD</div>
+<div class="sub">LIVE TODAY {{ today }} • 4 Sources: API-Football | Football-Data.org | SofaScore | Opta</div>
+
+{% set leagues_today = {} %}
+{% for g in live_games %}
+  {% if g.league not in leagues_today %}{% set _ = leagues_today.update({g.league: []}) %}{% endif %}
+  {% set _ = leagues_today[g.league].append(g) %}
 {% endfor %}
+
+{% for league, games in leagues_today.items() %}
+<div class="card">
+<div class="card-head"><span>🏆 {{ league }}</span><span style="font-size:11px;color:#94a3b8">{{ games|length }} matches</span></div>
+{% for g in games %}
+<div class="match">
+<div>
+<div class="team">{{ g.home }}</div>
+<div class="team">{{ g.away }}</div>
+<div class="time">{{ g.time }} • {{ g.source }}</div>
+</div>
+<div class="score-box">
+{% if g.live %}<div class="live"><span class="live-dot"></span>LIVE</div>{% endif %}
+<div class="score">{{ g.score }}</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endfor %}
+
+{% if not live_games %}
+<div class="card"><div style="padding:20px;color:#94a3b8">Loading today's matches... API syncing Getafe vs Malaga etc.</div></div>
+{% endif %}
+
+<div style="margin-top:18px;padding:12px;color:#64748b;font-size:13px">Select League for AI Predictions (3% prob)</div>
+{% for lg in leagues %}
+<a class="league-link" href="/league/{{ lg.id }}">{{ lg.name }}</a>
+{% endfor %}
+
 </body></html>
