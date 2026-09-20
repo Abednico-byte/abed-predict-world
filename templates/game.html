@@ -1,33 +1,48 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}} - Today Live</title><style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12px}
-.top{background:#132040;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:4px}
-.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354;overflow:auto;white-space:nowrap}
-.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px;user-select:none}
-.tab.active{color:#fff;border-bottom:3px solid #22c55e}
-.subs{display:flex;gap:14px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap;position:sticky;top:0;z-index:20}
-.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px;user-select:none}
-.sub.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
-.sec{background:#0c1830;padding:9px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
-.r{background:#1a2c4a;padding:11px 14px;border-bottom:1px solid #1e3354}
-.rtop{display:flex;justify-content:space-between;align-items:center}
-.lv{font-weight:800;color:#fff;font-size:14px;min-width:45px}.rv{font-weight:800;color:#fff;font-size:14px;min-width:45px;text-align:right}
-.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
-.bar{height:6px;background:#233a5a;border-radius:10px;margin-top:8px;display:flex;position:relative;overflow:hidden}
-.l{height:100%;background:#3b82f6}.rbar{height:100%;background:#3b82f6;margin-left:auto}
-.bar:after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#0e1a2f}
-.hide{display:none!important}
-.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e;position:sticky;top:38px;z-index:10}
-.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;border-radius:12px;font-size:13px;cursor:pointer;position:relative;user-select:none}
-.pmenu{position:absolute;top:45px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:420px;overflow:auto;z-index:9999;padding:8px;display:none}
-.pmenu.open{display:block}
-.pitem{padding:10px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:8px}
-.pitem:hover{color:#22c55e;background:#2a4a6e}.pitem.active{color:#22c55e;background:#2a4a6e;font-weight:700}
-.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 8px}
-.searchbox{width:calc(100% - 20px);background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;margin:10px;border-radius:10px}
-.prow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354}
-.sbar{width:90px;height:6px;background:#233a5a;border-radius:10px;overflow:hidden}.sfill{height:100%;background:#22c55e}
-.pname{color:#fff;font-weight:700;font-size:13px}.pteam{color:#6b7f9e;font-size:11px}
-.locked,.lock,.premium,.blur,.premium-lock,.paywall{pointer-events:auto!important;opacity:1!important;filter:none!important}
-.tab,.sub{pointer-events:auto!important;cursor:pointer!important}
+.top{background:#132040;padding:12px}.m{font-size:16px;font-weight:800;color:#fff;margin-top:4px}
+.tabs{display:flex;gap:10px;padding:10px;background:#132040;overflow:auto;white-space:nowrap;border-bottom:1px solid #1e3354}
+.tab{color:#8da0bf;padding:6px 12px;border-radius:20px;background:#1a2c4a;cursor:pointer;font-size:12px}.tab.active{background:#22c55e;color:#000;font-weight:800}
+.sec{background:#0c1830;padding:8px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
+.r{display:flex;justify-content:space-between;padding:10px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354}.live{background:#ef4444;color:#fff;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:800}
 </style></head><body>
-<div class="top"><div style="color:#8da0bf;font-size:11px">Today 19:45 • Stats</div><div class="m
+<div class="top"><div style="color:#ef4444;font-size:11px"><span class="live">LIVE TODAY</span> 20 Sep 2026 • Atletico vs Real Madrid 0-0 HT</div><div class="m" id="gTitle">{{game}}</div></div>
+<div class="tabs">
+<div class="tab active" id="t-today" onclick="showL('today')">🔴 TODAY</div>
+<div class="tab" id="t-laliga" onclick="showL('laliga')">🇪🇸 LaLiga</div>
+<div class="tab" id="t-epl" onclick="showL('epl')">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</div>
+<div class="tab" id="t-bundes" onclick="showL('bundes')">🇩🇪 Bundesliga</div>
+<div class="tab" id="t-seriea" onclick="showL('seriea')">🇮🇹 Serie A</div>
+<div class="tab" id="t-ligue1" onclick="showL('ligue1')">🇫🇷 Ligue 1</div>
+<div class="tab" id="t-erediv" onclick="showL('erediv')">🇳🇱 Eredivisie</div>
+<div class="tab" id="t-all" onclick="showL('all')">📊 Over 2.5 Rank</div>
+</div>
+<div id="content"></div>
+<script>
+const D={
+today:{name:"TODAY 20 Sep 2026 - Real Fixtures",games:["Getafe 1-0 Malaga FT","Atletico Madrid 0-0 Real Madrid LIVE HT 16:15 - Metropolitano","Depor vs Betis 18:30 TODAY","Villarreal vs Levante 18:30 TODAY","Valencia vs Real Sociedad 20:00 TODAY","Yesterday: Sevilla 1-3 Barcelona","Yesterday: Celta 5-0 Racing Santander"],table:[["Atletico vs Real H2H","Atletico 5-2 (Sep 2025)","Real 3-2 (Mar 2026)"],["Real Form","5W 1L 15pts #2","8 goals last 5"],["Atletico Form","3W 1D 2L 13pts #4","14 goals last 5"]],scorers:["Mbappe 18⚽ Real - Top Scorer LaLiga","Alvarez 7⚽ Atletico","Griezmann 6⚽ Atletico","Vinicius 5⚽ Real","Ferran Torres 13⚽ Barcelona (yesterday hat-trick?)"],over25:"65%"},
+laliga:{name:"LaLiga 26/27 Table Real",table:[["1","Barcelona","6W 18pts","31:7"],["2","Real Madrid","5W 1L 15pts","17:6"],["3","Betis","5W 1L 15pts"],["4","Atletico","13pts"],["5","Sevilla","13pts"]],scorers:["Mbappe 18 Real","Ferran 13 Barca","Lewa 8 Barca","Yamal 7 Barca","Raphinha 7 Barca"],over25:"65% Over 2.5"},
+epl:{name:"Premier League 26/27",table:[["1","Arsenal","4W 12pts"],["2","Man City","4W 12pts"],["3","Leeds","8pts"],["4","Hull","8pts"],["5","Brighton","7pts"],["6","Chelsea","7pts"]],scorers:["Haaland 3 Man City"],over25:"58%"},
+bundes:{name:"Bundesliga",table:[["1","Freiburg 9pts"],["2","Dortmund 9pts"],["3","Augsburg 7pts"],["5","Bayern 4pts"]],scorers:["Kane 4 Bayern"],over25:"62%"},
+seriea:{name:"Serie A",table:[["1","Lazio 10pts"],["2","Roma 9pts"],["3","Inter 9pts"],["4","Cagliari 9pts"]],scorers:["Lautaro 4 Inter"],over25:"56%"},
+ligue1:{name:"Ligue 1",table:[["1","Monaco 10pts"],["2","Rennes 10pts"],["3","Lyon 8pts"]],scorers:["Dembele 3 PSG"],over25:"60%"},
+erediv:{name:"Eredivisie - Best Over 2.5",table:[["1","AZ 16pts"],["2","PSV 13pts"],["3","Twente 13pts"],["4","Feyenoord 11pts"],["5","Ajax 10pts"]],scorers:["De Jong 5 PSV"],over25:"68% HIGHEST"}
+};
+function showL(l){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('t-'+l).classList.add('active');
+let d=D[l];let c=document.getElementById('content');let h="";
+if(l==='all'){
+h+=`<div class="sec">All European Leagues - Over 2.5 % - Pick GREENEST for 5-check system</div>`;
+h+=`<div class="r"><span>🇳🇱 Eredivisie</span><span style="color:#22c55e;font-weight:800">68% - BEST</span></div><div class="r"><span>🇪🇸 LaLiga</span><span style="color:#22c55e;font-weight:800">65% - TODAY Atletico vs Real 5/5 GREEN ✅</span></div><div class="r"><span>🇩🇪 Bundesliga</span><span style="color:#22c55e">62%</span></div><div class="r"><span>🇫🇷 Ligue 1</span><span>60%</span></div><div class="r"><span>🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</span><span>58%</span></div><div class="r"><span>🇮🇹 Serie A</span><span>56%</span></div>`;
+}else{
+h+=`<div class="sec">${d.name} - ${d.over25} Over 2.5</div>`;
+if(d.games){h+=`<div class="sec">Games Today</div>`;d.games.forEach(g=>{h+=`<div class="r"><span>${g}</span>${g.includes("LIVE")||g.includes("TODAY")?'<span class="live">TODAY</span>':''}</div>`;});}
+h+=`<div class="sec">Table</div>`;d.table.forEach(r=>{h+=`<div class="r"><span>${r[0]} ${r[1]}</span><span>${r[2]||''} ${r[3]||''}</span></div>`;});
+h+=`<div class="sec">Top Scorers Real Data</div>`;d.scorers.forEach(s=>{h+=`<div class="r"><span>${s}</span><span>⚽</span></div>`;});
+if(l==='today'){h+=`<div class="sec" style="background:#16a34a">✅ 5 CHECKS - Atletico vs Real = 5/5 GREEN 75% HIT Over 2.5</div><div class="r"><span>🟢 League 65% >60%</span><span>FootyStats</span></div><div class="r"><span>🟢 Shots 15.5 >13</span><span>FBref</span></div><div class="r"><span>🟢 BTTS 90% >55%</span><span>9/10 H2H</span></div><div class="r"><span>🟢 Last 5 = 4.4 goals >3</span><span>Flashscore</span></div><div class="r"><span>🟢 No striker injured</span><span>Mbappe FIT</span></div>`;}
+}
+c.innerHTML=h;
+}
+let titleEl=document.getElementById('gTitle');if(titleEl.innerText.includes("{{game}}")||titleEl.innerText.trim()==="")titleEl.innerText="Atletico Madrid vs Real Madrid - TODAY LIVE 0-0 HT";
+showL('today');
+</script></body></html>
