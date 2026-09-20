@@ -1,40 +1,38 @@
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>ABED PREDICT WORLD</title><style>
-*{margin:0;padding:0;box-sizing:border-box}body{background:#121212;color:#e2e8f0;font-family:sans-serif}
-.top{background:#1f1f1f;padding:10px 12px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:99}
-.logo{width:38px;height:38px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:20px}
-.search{flex:1;background:#2a2a2a;border-radius:24px;padding:10px 16px;display:flex;align-items:center;gap:8px;color:#888}
-.search input{background:transparent;border:0;color:#fff;width:100%;outline:none;font-size:14px}
-.country{background:#1e1e1e;margin:8px;border-radius:16px;overflow:hidden;border:1px solid #2a2a2a}
-.cheader{width:100%;background:#1e1e1e;border:0;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.flag{width:32px;height:32px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:18px}
-.cname{font-weight:600;font-size:15px}.arrow{width:36px;height:36px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center}
-.leagues{display:none;background:#1a1a1a}.leagues.open{display:block}
-.lrow{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 14px 60px;border-top:1px solid #262626;text-decoration:none;color:#ddd;font-size:13px}
-.lrow:hover{background:#252525}.pin{color:#666}.badge{font-size:10px;padding:2px 6px;border-radius:6px;margin-left:6px}.PRO{background:#1f3a2e;color:#22c55e}.AMATEUR{background:#3a2e1f;color:#fbbf24}.CUP{background:#2e2a3a;color:#a78bfa}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:#1f1f1f;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #2a2a2a}
-.bitem{color:#888;font-size:11px;text-align:center;flex:1}.bitem.active{color:#22c55e}
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0e1625;color:#cbd5e1;font-family:sans-serif;font-size:13px}
+.topbar{display:flex;justify-content:space-between;padding:8px 12px;background:#111c2e;color:#22c55e;font-weight:800;border-bottom:1px solid #1f2e4a}
+.sec{padding:10px 12px;background:#111c2e}
+.today{font-size:20px;font-weight:800;color:#fff;margin-bottom:10px}
+.flt{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.fb{width:36px;height:36px;background:#1a2538;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid #1f2e4a}
+.live{margin-left:auto;background:#1a2538;border:1px solid #1f2e4a;border-radius:20px;padding:6px 12px;display:flex;gap:8px;align-items:center}
+.days{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
+.day{padding:8px 14px;border-radius:8px;background:#1a2538;color:#8da0bf;font-weight:700;white-space:nowrap;border:1px solid #1f2e4a}.day.active{background:#3a4a66;color:#fff}
+.month{font-size:14px;font-weight:800;color:#fff;margin:16px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.dc{background:#1a2538;border:1px solid #1f2e4a;border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer}.dc.active{background:#1f3d2e;border-color:#22c55e;color:#22c55e}.dc.wd{font-size:10px;color:#8da0bf}.dc.dt{font-size:12px;font-weight:800;margin-top:2px}
+.country{display:flex;justify-content:space-between;padding:10px 12px;background:#1a2538;border-bottom:1px solid #1f2e4a;cursor:pointer}
+.league{padding:8px 12px;background:#0f172a;border-bottom:1px solid #1f2e4a;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#111c2e;display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #1f2e4a}
+.bitem{color:#64748b;font-size:11px;text-align:center;text-decoration:none}.bitem.active{color:#fff}
+.hide{display:none}
 </style></head><body>
-<div class="top"><div class="logo">A</div><div class="search">🔍 <input id="s" placeholder="Search ABED PREDICT WORLD..." onkeyup="filterC()"></div></div>
-
-<div id="list">
-{% for country, leagues in countries.items() %}
-<div class="country" data-c="{{country|lower}}">
-<button class="cheader" onclick="toggle('c{{loop.index}}')">
-<div style="display:flex;align-items:center;gap:12px"><div class="flag">{% if country=='Spain' %}🇪🇸{% elif country=='Greece' %}🇬🇷{% elif country=='Sweden' %}🇸🇪{% elif country=='England' %}🏴󠁧󠁢󠁥󠁮󠁧󠁿{% elif country=='Germany' %}🇩🇪{% elif country=='Belgium' %}🇧🇪{% elif country=='Botswana' %}🇧🇼{% elif country=='South Africa' %}🇿🇦{% else %}🏳️{% endif %}</div><div class="cname">{{country}}</div></div>
-<div class="arrow" id="a-c{{loop.index}}">⌄</div>
-</button>
-<div class="leagues" id="c{{loop.index}}">
-{% for l in leagues %}
-<a class="lrow" href="/league/{{l.id}}"><div> {% if l.type=='PRO' %}🛡️{% elif l.type=='AMATEUR' %}👥{% else %}🏆{% endif %} {{l.n.replace(country+' - ','')}} <span class="badge {{l.type}}">{{l.type}}</span></div><span class="pin">📌</span></a>
-{% endfor %}
+<div class="topbar"><div>⭐ NEW ▼</div><div>🤖 BOTS ▼</div><div>🎓 Guides</div></div>
+<div class="sec">
+<div class="today">Today</div>
+<div class="flt"><div class="fb">▼</div><div class="fb">✨</div><div class="fb">⚙️</div><div class="fb" style="color:#22c55e">📅</div><div class="live">● LIVE</div></div>
+<div class="days"><div class="day active">📅 Today</div><div class="day">› Tomorrow</div><div class="day">» Next 7 Days</div></div>
+<div class="month">September</div>
+<div class="grid">
+<div class="dc"><div class="wd">FRI</div><div class="dt">25TH</div></div><div class="dc"><div class="wd">THU</div><div class="dt">24TH</div></div><div class="dc"><div class="wd">WED</div><div class="dt">23RD</div></div><div class="dc"><div class="wd">TUE</div><div class="dt">22ND</div></div><div class="dc"><div class="wd">MON</div><div class="dt">21ST</div></div>
+<div class="dc active"><div class="wd">SUN</div><div class="dt">20TH</div></div><div class="dc"><div class="wd">SAT</div><div class="dt">19TH</div></div><div class="dc"><div class="wd">FRI</div><div class="dt">18TH</div></div><div class="dc"><div class="wd">THU</div><div class="dt">17TH</div></div><div class="dc"><div class="wd">WED</div><div class="dt">16TH</div></div>
+<div class="dc"><div class="wd">TUE</div><div class="dt">15TH</div></div><div class="dc"><div class="wd">MON</div><div class="dt">14TH</div></div><div class="dc"><div class="wd">SUN</div><div class="dt">13TH</div></div><div class="dc"><div class="wd">SAT</div><div class="dt">12TH</div></div><div class="dc"><div class="wd">FRI</div><div class="dt">11TH</div></div>
 </div>
 </div>
-{% endfor %}
-</div>
-<div style="height:70px"></div>
-<div class="bottom"><div class="bitem active">⚽<br>Football</div><div class="bitem">☆<br>Favourites</div><div class="bitem">🔥<br>Never Miss</div></div>
-<script>
-function toggle(id){var el=document.getElementById(id);var ar=document.getElementById('a-'+id);el.classList.toggle('open');ar.innerHTML=el.classList.contains('open')?'⌃':'⌄';}
-function filterC(){var q=document.getElementById('s').value.toLowerCase();document.querySelectorAll('.country').forEach(function(c){c.style.display=c.dataset.c.includes(q)?'block':'none';});}
-</script>
+<div id="countries">{% for country, leagues in countries.items() %}
+<div class="country" onclick="document.getElementById('c-{{country}}').classList.toggle('hide')"><div>🌍 {{country}}</div><div>{{leagues|length}} leagues ▼</div></div>
+<div id="c-{{country}}" class="hide">{% for lg in leagues %}<a href="/league/{{lg.id}}" style="text-decoration:none"><div class="league"><span>{{lg.n}}</span><span style="color:#22c55e">{{lg.games|length}} games ›</span></div></a>{% endfor %}</div>
+{% endfor %}</div>
+<div style="height:80px"></div>
+<div class="bottom"><a href="/" class="bitem active">⚽<br>Fixtures</a><a href="/filters" class="bitem">🔔<br>Alerts</a><a href="/filters" class="bitem">📈<br>Trends</a><a href="/filters" class="bitem">☰<br>More</a></div>
 </body></html>
