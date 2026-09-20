@@ -21,7 +21,7 @@ body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:90p
 <span>{{ data.type }} {{ data.country }} - {{ data.league }}</span><span>▼ {{ data.games|length }}</span>
 </div>
 <div class="league-details" id="d{{ loop.index }}{{ continent|replace(' ','') }}">
-<div><b>👕 Teams:</b><br>{% for tm in data.teams %}<span class="team-pill">{{ tm }}</span>{% endfor %}</div>
+<div><b>👕 Teams:</b><br>{% for tm in data.teams %}<span class="team-pill" onclick="openTeam('{{ tm }}','{{ data.league }}')" style="cursor:pointer;border:1px solid #22c55e">{{ tm }} ↗</span>{% endfor %}</div>
 <div style="margin:10px 0"><b>⚽ Top Players:</b>{% for s in data.scorers %}<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e293b;font-size:13px"><span>{{ s.name }}</span><b>{{ s.goals }} goals</b></div>{% endfor %}</div>
 <div style="margin:8px 0;background:#111c33;border-radius:8px;padding:8px;font-size:12px"><b>📊 Stats:</b> Table, Form, Avg Goals, BTTS - All included</div>
 {% for g in data.games %}
@@ -39,4 +39,5 @@ body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:90p
 function openMatch(h,a,l,s,t){document.getElementById('mTeams').innerText=h+' vs '+a;document.getElementById('mLeague').innerText=l;document.getElementById('mScore').innerText=s+' '+t;document.getElementById('modal').style.display='block';}
 function closeM(){document.getElementById('modal').style.display='none';}
 </script>
+  <div onclick="openPlayer('{{ s.name }}','{{ s.goals }}')" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px;cursor:pointer"><span>{{ s.name }} ↗</span><b>{{ s.goals }} goals</b></div>
 </body></html>
