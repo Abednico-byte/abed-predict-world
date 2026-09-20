@@ -1,30 +1,28 @@
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12px}
 .top{background:#132040;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:4px}
-.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354;overflow:auto}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px;white-space:nowrap;user-select:none}.tab.active{color:#fff;border-bottom:3px solid #22c55e}
-.subs{display:flex;gap:14px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap;position:sticky;top:0;z-index:50}.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px;user-select:none}.sub.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
+.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px}.tab.active{color:#fff;border-bottom:3px solid #22c55e}
+.subs{display:flex;gap:14px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap;position:sticky;top:0;z-index:10}.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px}.sub.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
 .sec{background:#0c1830;padding:9px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
-.r{background:#1a2c4a;padding:11px 14px;border-bottom:1px solid #1e3354;cursor:pointer}.rtop{display:flex;justify-content:space-between;align-items:center}.lv{font-weight:800;color:#fff;font-size:14px;min-width:45px}.rv{font-weight:800;color:#fff;font-size:14px;min-width:45px;text-align:right}.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
+.r{background:#1a2c4a;padding:11px 14px;border-bottom:1px solid #1e3354}.rtop{display:flex;justify-content:space-between}.lv{font-weight:800;color:#fff;font-size:14px}.rv{font-weight:800;color:#fff;font-size:14px;text-align:right}.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
 .bar{height:6px;background:#233a5a;border-radius:10px;margin-top:8px;display:flex;position:relative;overflow:hidden}.l{height:100%;background:#3b82f6}.rbar{height:100%;background:#3b82f6;margin-left:auto}.bar:after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#0e1a2f}
 .hide{display:none!important}
-.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e;position:sticky;top:38px;z-index:40}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;border-radius:12px;font-size:13px;cursor:pointer;position:relative;user-select:none}
-.pmenu{position:absolute;top:45px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:420px;overflow:auto;z-index:9999;padding:8px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}.pmenu.open{display:block}
-.pitem{padding:10px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:8px}.pitem:hover{color:#22c55e;background:#2a4a6e}.pitem.active{color:#22c55e;background:#2a4a6e;font-weight:700}
-.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 8px;letter-spacing:.5px}
+.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;border-radius:12px;font-size:13px;cursor:pointer;position:relative}
+.pmenu{position:absolute;top:45px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:420px;overflow:auto;z-index:9999;padding:8px;display:none}.pmenu.open{display:block}
+.pitem{padding:10px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:8px}.pitem:hover{color:#22c55e;background:#2a4a6e}.pitem.active{color:#22c55e;background:#2a4a6e}
+.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 8px}
 .searchbox{width:calc(100% - 20px);background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;margin:10px;border-radius:10px}
-.prow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354;cursor:pointer}.prow:hover{background:#223a5e}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354}
 .sbar{width:90px;height:6px;background:#233a5a;border-radius:10px;overflow:hidden}.sfill{height:100%;background:#22c55e}
 .pname{color:#fff;font-weight:700;font-size:13px}.pteam{color:#6b7f9e;font-size:11px}
 </style></head><body>
-<div class="top"><div style="color:#8da0bf;font-size:11px">Today 19:45 🏆 LaLiga</div><div class="m">{{game}}</div></div>
-
+<div class="top"><div style="color:#8da0bf;font-size:11px" id="leagueInfo">Today 19:45</div><div class="m" id="gameTitle">{{game}}</div></div>
 <div class="tabs">
 <div class="tab" id="t-create" onclick="showTop('create')">Create</div>
 <div class="tab active" id="t-stats" onclick="showTop('stats')">Stats</div>
 <div class="tab" id="t-odds" onclick="showTop('odds')">Odds</div>
 <div class="tab" id="t-pred" onclick="showTop('pred')">Predictions</div>
 </div>
-
 <div id="content-stats">
 <div class="subs">
 <div class="sub" id="s-general" onclick="showS('general')">General</div>
@@ -34,58 +32,21 @@
 <div class="sub" id="s-cards" onclick="showS('cards')">Cards</div>
 <div class="sub active" id="s-players" onclick="showS('players')">Players</div>
 </div>
-
-<div id="tab-general" class="hide">
-<div class="sec">General - Overall vs Away</div>
-<div class="r"><div class="rtop"><div class="lv">2</div><div class="mid">LEAGUE POS</div><div class="rv">5</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">4</div><div class="mid">PLAYED</div><div class="rv">1</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">WIN %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:50%"></div><div class="rbar" style="width:0%"></div></div></div>
-</div>
-
-<div id="tab-goals" class="hide">
-<div class="sec">Stats Overall vs Away</div>
-<div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div><div class="bar"><div class="l" style="width:52%"></div><div class="rbar" style="width:48%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">8</div><div class="mid">SCORED</div><div class="rv">1</div></div><div class="bar"><div class="l" style="width:88%"></div><div class="rbar" style="width:12%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">2.67</div><div class="mid">SCORED PG</div><div class="rv">1.00</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">5</div><div class="mid">CONCEDED</div><div class="rv">3</div></div></div>
-<div class="sec">Outcome %</div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:67%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+2.5 GOALS %</div><div class="rv">100%</div></div></div>
-</div>
-
-<div id="tab-timing" class="hide">
-<div class="sec">Goal Timing - Overall vs Away</div>
-<div class="r"><div class="rtop"><div class="lv">9'</div><div class="mid">1ST GOAL AVG</div><div class="rv">15'</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">0-15' GOAL %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:67%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">16-30' GOAL %</div><div class="rv">0%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">31-45' GOAL %</div><div class="rv">0%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">76-90' GOAL %</div><div class="rv">100%</div></div></div>
-</div>
-
-<div id="tab-corners" class="hide">
-<div class="sec">Corners - Overall vs Away</div>
-<div class="r"><div class="rtop"><div class="lv">12.0</div><div class="mid">TOTAL CORNERS PG</div><div class="rv">9.0</div></div><div class="bar"><div class="l" style="width:57%"></div><div class="rbar" style="width:43%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">7.5</div><div class="mid">CORNERS FOR PG</div><div class="rv">3.0</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+8.5 CORNERS %</div><div class="rv">100%</div></div></div>
-</div>
-
-<div id="tab-cards" class="hide">
-<div class="sec">Cards - Overall vs Away</div>
-<div class="r"><div class="rtop"><div class="lv">4.00</div><div class="mid">AVG CARDS PG</div><div class="rv">3.33</div></div><div class="bar"><div class="l" style="width:54%"></div><div class="rbar" style="width:45%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">75%</div><div class="mid">+2.5 CARDS %</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">+4.5 CARDS %</div><div class="rv">0%</div></div></div>
-</div>
-
+<div id="tab-general" class="hide"><div class="sec">General</div><div class="r"><div class="rtop"><div class="lv">2</div><div class="mid">LEAGUE POS</div><div class="rv">5</div></div></div></div>
+<div id="tab-goals" class="hide"><div class="sec">Goals Overall vs Away</div><div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div><div class="bar"><div class="l" style="width:52%"></div><div class="rbar" style="width:48%"></div></div></div></div>
+<div id="tab-timing" class="hide"><div class="sec">Timing</div><div class="r">Goal timing restored</div></div>
+<div id="tab-corners" class="hide"><div class="sec">Corners</div><div class="r">Corners restored</div></div>
+<div id="tab-cards" class="hide"><div class="sec">Cards</div><div class="r">Cards restored</div></div>
 <div id="tab-players">
 <div class="pfilter">
-<div class="pdrop" onclick="toggleM('m1')"><span id="selStat">📊 Shots</span> ▾
+<div class="pdrop" onclick="toggleM('m1')"><span id="selStat">📊 Goals</span> ▾
 <div id="m1" class="pmenu">
 <div class="pcat">ATTACKING</div>
-<div class="pitem" onclick="setStat('Goals')">Goals</div>
+<div class="pitem active" onclick="setStat('Goals')">Goals</div>
 <div class="pitem" onclick="setStat('Goals / Game')">Goals / Game</div>
 <div class="pitem" onclick="setStat('Assists')">Assists</div>
 <div class="pcat">SHOOTING</div>
-<div class="pitem active" onclick="setStat('Shots')">Shots</div>
+<div class="pitem" onclick="setStat('Shots')">Shots</div>
 <div class="pitem" onclick="setStat('Shots On Target')">Shots On Target</div>
 <div class="pitem" onclick="setStat('SoT / Game')">SoT / Game</div>
 <div class="pcat">PASSING</div>
@@ -94,26 +55,66 @@
 <div class="pitem" onclick="setStat('Pass Accuracy %')">Pass Accuracy %</div>
 <div class="pcat">DEFENSIVE</div>
 <div class="pitem" onclick="setStat('Tackles')">Tackles</div>
-<div class="pitem" onclick="setStat('Clearances')">Clearances</div>
 <div class="pitem" onclick="setStat('Duels')">Duels</div>
-<div class="pitem" onclick="setStat('Duels Won')">Duels Won</div>
 <div class="pitem" onclick="setStat('Aerials Won')">Aerials Won</div>
-<div class="pcat">DISCIPLINE</div>
-<div class="pitem" onclick="setStat('Fouls')">Fouls</div>
-<div class="pitem" onclick="setStat('Yellow Cards')">Yellow Cards</div>
 </div></div>
-<div class="pdrop" onclick="toggleM('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem active">2024/25 Season</div><div class="pitem">Last 5 Games</div><div class="pitem">Home Only</div><div class="pitem">Away Only</div></div></div>
+<div class="pdrop" onclick="toggleM('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem">Season</div></div></div>
 </div>
 <input class="searchbox" id="pSearch" oninput="filterPlayers()" placeholder="🔍 Search player...">
+<div id="plist"></div>
+</div>
+</div>
+<div id="content-odds" class="hide"><div class="sec">Odds</div><div class="r">Odds clickable</div></div>
+<div id="content-pred" class="hide"><div class="sec">Predictions</div><div class="r">Predictions clickable</div></div>
+<div id="content-create" class="hide"><div class="sec">Create</div><div class="r">Create clickable</div></div>
+<script>
+const PLAYERS_DB = {
+"man city": [{n:"Erling Haaland",p:"Forward",s:5},{n:"Phil Foden",p:"Midfield",s:4},{n:"Bernardo Silva",p:"Midfield",s:3},{n:"Kevin De Bruyne",p:"Midfield",s:3},{n:"Rodri",p:"Midfield",s:2}],
+"arsenal": [{n:"Bukayo Saka",p:"Forward",s:5},{n:"Martin Odegaard",p:"Midfield",s:4},{n:"Gabriel Jesus",p:"Forward",s:3},{n:"Declan Rice",p:"Midfield",s:2},{n:"William Saliba",p:"Defender",s:1}],
+"real madrid": [{n:"Kylian Mbappe",p:"Forward",s:5},{n:"Vinicius Jr",p:"Forward",s:5},{n:"Jude Bellingham",p:"Midfield",s:4},{n:"Rodrygo",p:"Forward",s:3},{n:"Federico Valverde",p:"Midfield",s:2}],
+"sevilla": [{n:"Dodi Lukebakio",p:"Forward",s:4},{n:"Isaac Romero",p:"Forward",s:3},{n:"Lucas Ocampos",p:"Forward",s:2},{n:"Ivan Rakitic",p:"Midfield",s:2},{n:"Sergio Ramos",p:"Defender",s:1}],
+"atletico": [{n:"Antoine Griezmann",p:"Forward",s:5},{n:"Alvaro Morata",p:"Forward",s:4},{n:"Koke",p:"Midfield",s:2},{n:"Marcos Llorente",p:"Midfield",s:2},{n:"Jan Oblak",p:"Goalkeeper",s:0}],
+"barcelona": [{n:"Robert Lewandowski",p:"Forward",s:5},{n:"Lamine Yamal",p:"Forward",s:4},{n:"Pedri",p:"Midfield",s:3},{n:"Gavi",p:"Midfield",s:2},{n:"Raphinha",p:"Forward",s:3}],
+"psg": [{n:"Ousmane Dembele",p:"Forward",s:3},{n:"Goncalo Ramos",p:"Forward",s:3},{n:"Marquinhos",p:"Defender",s:2},{n:"Achraf Hakimi",p:"Defender",s:2},{n:"Vitinha",p:"Midfield",s:2}],
+"marseille": [{n:"M. Greenwood",p:"Forward",s:4},{n:"A. Gouiri",p:"Forward",s:2},{n:"P. Aubameyang",p:"Forward",s:3},{n:"V. Rongier",p:"Midfield",s:1}],
+"bayern": [{n:"Harry Kane",p:"Forward",s:5},{n:"Jamal Musiala",p:"Midfield",s:4},{n:"Leroy Sane",p:"Forward",s:3}],
+"dortmund": [{n:"Julian Brandt",p:"Midfield",s:3},{n:"Niclas Fullkrug",p:"Forward",s:4}]
+};
 
-<div id="plist">
-<div class="prow"><div><div class="pname">Dodi Lukebakio</div><div class="pteam">Sevilla • Forward • #11</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">14</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Mason Greenwood</div><div class="pteam">Marseille • Forward • #10</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">12</div><div class="sbar"><div class="sfill" style="width:85%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Ousmane Dembélé</div><div class="pteam">PSG • Forward • #10</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">11</div><div class="sbar"><div class="sfill" style="width:78%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Vinicius Jr</div><div class="pteam">Real Madrid • Forward • #7</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">10</div><div class="sbar"><div class="sfill" style="width:71%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Jude Bellingham</div><div class="pteam">Real Madrid • Midfield • #5</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">9</div><div class="sbar"><div class="sfill" style="width:64%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Amine Gouiri</div><div class="pteam">Marseille • Forward • #9</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">8</div><div class="sbar"><div class="sfill" style="width:57%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Marquinhos</div><div class="pteam">PSG • Defender • #5</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">5</div><div class="sbar"><div class="sfill" style="width:35%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Isaac Romero</div><div class="pteam">Sevilla • Forward • #7</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">7</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Kylian Mbappé</div><div class="pteam">Real Madrid • Forward • #9</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">15</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Federico Valverde</div><div class="pteam">Real Madrid • Midfield • #8</div></div><div style="
+function getTeamsFromTitle(t){
+  let title = t.toLowerCase().replace(' vs ','|').replace(' - ','|');
+  let parts = title.split('|');
+  if(parts.length>=2) return [parts[0].trim(), parts[1].trim()];
+  let vs = t.toLowerCase().split(' vs ');
+  if(vs.length==2) return [vs[0].trim(), vs[1].trim()];
+  return [t.toLowerCase().trim(), ''];
+}
+function findPlayersForTeam(team){
+  team=team.toLowerCase();
+  for(let k in PLAYERS_DB){ if(team.includes(k) || k.includes(team)) return PLAYERS_DB[k].map(p=>({...p, team: k})); }
+  return [];
+}
+function loadPlayersForGame(){
+  let title = document.getElementById('gameTitle').innerText;
+  let teams = getTeamsFromTitle(title);
+  let home = teams[0], away = teams[1];
+  let homePlayers = findPlayersForTeam(home);
+  let awayPlayers = findPlayersForTeam(away);
+  let all = [...homePlayers.map(p=>({...p, displayTeam: home.toUpperCase()})),...awayPlayers.map(p=>({...p, displayTeam: away.toUpperCase()}))];
+  if(all.length==0){ all=[{n:"No players found for "+title,p:"",s:0,displayTeam:""}]; }
+  all.sort((a,b)=>b.s-a.s);
+  let max = Math.max(...all.map(p=>p.s),1);
+  let html='';
+  all.forEach(pl=>{
+    let w = Math.round((pl.s/max)*100);
+    html+=`<div class="prow"><div><div class="pname">${pl.n}</div><div class="pteam">${pl.displayTeam} • ${pl.p}</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">${pl.s}</div><div class="sbar"><div class="sfill" style="width:${w}%"></div></div></div></div>`;
+  });
+  document.getElementById('plist').innerHTML=html;
+}
+function showS(n){document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));document.getElementById('tab-'+n).classList.remove('hide');document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));document.getElementById('s-'+n).classList.add('active');}
+function showTop(n){document.querySelectorAll('.tabs.tab').forEach(t=>t.classList.remove('active'));document.getElementById('t-'+n).classList.add('active');['stats','odds','pred','create'].forEach(x=>{let el=document.getElementById('content-'+x);if(el)el.classList.add('hide')});document.getElementById('content-'+n).classList.remove('hide');}
+function toggleM(id){let m=document.getElementById(id);let o=m.classList.contains('open');document.querySelectorAll('.pmenu').forEach(x=>x.classList.remove('open'));if(!o)m.classList.add('open');}
+function setStat(v){document.getElementById('selStat').innerText='📊 '+v;document.getElementById('m1').classList.remove('open');loadPlayersForGame();}
+function filterPlayers(){let q=document.getElementById('pSearch').value.toLowerCase();document.querySelectorAll('#plist.prow').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(q)?'flex':'none'})}
+showTop('stats');showS('players');loadPlayersForGame();
+document.addEventListener('click',function(e){if(!e.target.closest('.pdrop'))
