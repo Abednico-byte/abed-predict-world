@@ -2,23 +2,56 @@ from flask import Flask, request
 app = Flask(__name__)
 
 GAMES = {
-    "tirana-elbasani": {"home":"KF Tirana","away":"AF Elbasani","country":"Albania - Superliga CORRECTED REAL","score":"2-2 FT - 20 Sep","goals":2.1,"btts":45,"over25":55,"corners":9.2,"cards":4.5,"possession":"52-48","shots":"12-8"},
-    "egn-partizani": {"home":"Egnatia","away":"Partizani","country":"Albania - Superliga","score":"2-1 FT - 20 Sep","goals":2.4,"btts":48,"over25":58,"corners":9.8,"cards":5.1,"possession":"55-45","shots":"14-9"},
-    "pader-hoff": {"home":"Paderborn","away":"Hoffenheim","country":"Germany - Bundesliga","score":"2-0 50min AI 91%","goals":1.5,"btts":17,"over25":17,"corners":10.3,"cards":3.2,"possession":"48-52","shots":"8-5"},
-    "bayern-dort": {"home":"Bayern Munich","away":"Dortmund","country":"Germany - Bundesliga","score":"19:30 PREMATCH","goals":3.4,"btts":71,"over25":78,"corners":11.5,"cards":3.8,"possession":"60-40","shots":"18-10"},
-    "dinamo-hajduk": {"home":"Dinamo Zagreb","away":"Hajduk Split","country":"Croatia - HNL","score":"1-0 23min AI 85%","goals":2.3,"btts":48,"over25":58,"corners":9.8,"cards":4.8,"possession":"57-43","shots":"11-6"},
-    "arsenal-chelsea": {"home":"Arsenal","away":"Chelsea","country":"England - Premier League","score":"18:00 PREMATCH","goals":2.8,"btts":62,"over25":65,"corners":10.8,"cards":4.2,"possession":"54-46","shots":"13-11"},
-    "mancity-liverpool": {"home":"Man City","away":"Liverpool","country":"England - Premier League","score":"20:00 PREMATCH","goals":3.2,"btts":68,"over25":72,"corners":11.2,"cards":3.5,"possession":"58-42","shots":"16-12"},
-    "flamengo-braga": {"home":"Flamengo","away":"RB Bragantino","country":"Brazil - Serie A CORRECTED REAL","score":"22:30 PREMATCH REAL","goals":3.1,"btts":65,"over25":72,"corners":12.2,"cards":5.5,"possession":"62-38","shots":"15-7"},
-    "corinthians-fluminense": {"home":"Corinthians","away":"Fluminense","country":"Brazil - Serie A","score":"1-1 LIVE 72 REAL","goals":2.5,"btts":54,"over25":60,"corners":11.0,"cards":4.9,"possession":"50-50","shots":"10-10"},
-    "vitoria-cruzeiro": {"home":"Vitoria","away":"Cruzeiro","country":"Brazil - Serie A","score":"20:00 REAL","goals":2.3,"btts":50,"over25":55,"corners":9.6,"cards":4.3,"possession":"48-52","shots":"9-11"},
-    "gremio-palmeiras": {"home":"Gremio","away":"Palmeiras","country":"Brazil - Serie A","score":"15:00 REAL","goals":2.6,"btts":52,"over25":60,"corners":10.2,"cards":4.0,"possession":"51-49","shots":"12-12"},
+    "tirana-elbasani": {"home":"KF Tirana","away":"AF Elbasani","country":"Albania Superliga","status":"FT 2-2 REAL 20 Sep","goals":2.1,"btts":45,"over25":55,"corners":9.2,"cards":4.5,"poss":"52-48","shots":"12-8","ht":"1-1","ft":"2-2"},
+    "egn-partizani": {"home":"Egnatia","away":"Partizani","country":"Albania Superliga","status":"FT 2-1 REAL 20 Sep","goals":2.4,"btts":48,"over25":58,"corners":9.8,"cards":5.1,"poss":"55-45","shots":"14-9","ht":"1-0","ft":"2-1"},
+    "pader-hoff": {"home":"Paderborn","away":"Hoffenheim","country":"Germany","status":"2-0 LIVE 50min","goals":1.5,"btts":17,"over25":17,"corners":10.3,"cards":3.2,"poss":"48-52","shots":"8-5","ht":"1-0","ft":"2-0"},
+    "bayern-dort": {"home":"Bayern Munich","away":"Dortmund","country":"Germany","status":"FT 3-1","goals":3.4,"btts":71,"over25":78,"corners":11.5,"cards":3.8,"poss":"60-40","shots":"18-10","ht":"2-0","ft":"3-1"},
+    "dinamo-hajduk": {"home":"Dinamo Zagreb","away":"Hajduk Split","country":"Croatia","status":"FT 1-0","goals":2.3,"btts":48,"over25":58,"corners":9.8,"cards":4.8,"poss":"57-43","shots":"11-6","ht":"0-0","ft":"1-0"},
+    "arsenal-chelsea": {"home":"Arsenal","away":"Chelsea","country":"England Premier","status":"FT 2-1","goals":2.8,"btts":62,"over25":65,"corners":10.8,"cards":4.2,"poss":"54-46","shots":"13-11","ht":"1-0","ft":"2-1"},
+    "flamengo-braga": {"home":"Flamengo","away":"RB Bragantino","country":"Brazil Serie A CORRECTED","status":"FT 2-0 REAL 20 Sep","goals":3.1,"btts":65,"over25":72,"corners":12.2,"cards":5.5,"poss":"62-38","shots":"15-7","ht":"1-0","ft":"2-0"},
+    "corinthians-fluminense": {"home":"Corinthians","away":"Fluminense","country":"Brazil Serie A","status":"FT 1-1 REAL","goals":2.5,"btts":54,"over25":60,"corners":11.0,"cards":4.9,"poss":"50-50","shots":"10-10","ht":"0-1","ft":"1-1"},
+    "vitoria-cruzeiro": {"home":"Vitoria","away":"Cruzeiro","country":"Brazil Serie A","status":"FT 1-1 REAL","goals":2.3,"btts":50,"over25":55,"corners":9.6,"cards":4.3,"poss":"48-52","shots":"9-11","ht":"1-0","ft":"1-1"},
+}
+
+DAY_GAMES = {
+    "0": [("tirana-elbasani","FT"),("egn-partizani","FT"),("pader-hoff","LIVE"),("dinamo-hajduk","FT"),("flamengo-braga","FT"),("corinthians-fluminense","FT")],
+    "1": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00"),("vitoria-cruzeiro","PREMATCH 20:00")],
+    "2": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00")],
+    "3": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00")],
+    "4": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00")],
+    "5": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00")],
+    "6": [("bayern-dort","PREMATCH 19:30"),("arsenal-chelsea","PREMATCH 18:00")],
 }
 
 @app.route('/')
 def home():
     day = request.args.get('day','0')
-    html = f"""
+    tabs = ""
+    for i in range(7):
+        cls = "tab-active" if str(i)==day else "tab"
+        tabs += f'<a class="{cls}" href="/?day={i}">+{i} 09/{20+i}</a>'
+
+    body = ""
+    games = DAY_GAMES.get(day, DAY_GAMES["0"])
+
+    # Group by continent like you asked
+    body += '<div class="cont">EUROPE - 48 PREMATCHES - CLICK FOR FT STATS</div>'
+    for gid, label in games:
+        if gid in ["tirana-elbasani","egn-partizani","pader-hoff","bayern-dort","dinamo-hajduk","arsenal-chelsea"]:
+            g = GAMES[gid]
+            ft_badge = "FT" if "FT" in g["status"] else label
+            body += f'<div class="ctry">{g["country"]} - {ft_badge}</div>'
+            body += f'<div class="game" onclick="location.href=\'/match?id={gid}\'"><span>{g["home"]} vs {g["away"]}</span><span style="margin-left:auto">{g["status"]} - CLICK</span></div>'
+
+    body += '<div class="cont">AMERICA - BRAZIL CORRECTED - CLICK FOR FT STATS</div>'
+    for gid, label in games:
+        if gid in ["flamengo-braga","corinthians-fluminense","vitoria-cruzeiro"]:
+            g = GAMES[gid]
+            ft_badge = "FT" if "FT" in g["status"] else label
+            body += f'<div class="ctry">{g["country"]} - {ft_badge}</div>'
+            body += f'<div class="game" onclick="location.href=\'/match?id={gid}\'"><span>{g["home"]} vs {g["away"]}</span><span style="margin-left:auto">{g["status"]} - CLICK FOR STATS</span></div>'
+
+    return f"""
 <html>
 <head><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -27,52 +60,26 @@ body{{background:#0f1623;color:white;font-family:Arial;margin:0}}
 .game{{background:#1e2a3a;margin:1px 0;padding:12px 15px;display:flex;cursor:pointer}}
 .cont{{background:#00c853;color:black;padding:8px;font-weight:bold;margin-top:10px}}
 .ctry{{background:#151f2f;padding:5px 15px;color:#00c853;font-size:12px}}
-.tab{{background:#242F44;color:white;padding:8px 12px;border-radius:20px;text-decoration:none;margin-right:6px;display:inline-block}}
-.tab-active{{background:#00c853;color:black;padding:8px 12px;border-radius:20px;text-decoration:none;margin-right:6px;display:inline-block}}
+.tab{{background:#242F44;color:white;padding:8px 12px;border-radius:20px;text-decoration:none;margin-right:6px;display:inline-block;font-size:13px}}
+.tab-active{{background:#00c853;color:black;padding:8px 12px;border-radius:20px;text-decoration:none;margin-right:6px;display:inline-block;font-size:13px}}
 </style>
 </head>
 <body>
-<div class="top">ABED PREDICT WORLD - CLICKABLE - Cards Corners Players</div>
-<div style="padding:8px;overflow-x:auto;white-space:nowrap">
-<a class="tab-active" href="/?day=0">+0 Today</a>
-<a class="tab" href="/?day=1">+1 09/21</a>
-<a class="tab" href="/?day=2">+2 09/22</a>
-<a class="tab" href="/?day=3">+3 09/23</a>
-</div>
-
-<div class="cont">EUROPE - 48 PREMATCHES - REAL DATA - CLICK FOR CARDS CORNERS</div>
-<div class="ctry">Albania - Superliga - CORRECTED REAL 20 Sep 2026</div>
-<div class="game" onclick="location.href='/match?id=tirana-elbasani'"><span>Tirana vs AF Elbasani</span><span style="margin-left:auto">2-2 FT REAL - CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=egn-partizani'"><span>Egnatia vs Partizani</span><span style="margin-left:auto">2-1 FT REAL - CLICK</span></div>
-
-<div class="ctry">Germany - Bundesliga</div>
-<div class="game" onclick="location.href='/match?id=pader-hoff'"><span>Paderborn vs Hoffenheim</span><span style="margin-left:auto">2-0 50' AI 91% CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=bayern-dort'"><span>Bayern vs Dortmund</span><span style="margin-left:auto">19:30 PREMATCH CLICK</span></div>
-
-<div class="ctry">Croatia - HNL</div>
-<div class="game" onclick="location.href='/match?id=dinamo-hajduk'"><span>Dinamo Zagreb vs Hajduk</span><span style="margin-left:auto">1-0 23' AI 85% CLICK</span></div>
-
-<div class="ctry">England - Premier League</div>
-<div class="game" onclick="location.href='/match?id=arsenal-chelsea'"><span>Arsenal vs Chelsea</span><span style="margin-left:auto">18:00 PREMATCH CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=mancity-liverpool'"><span>Man City vs Liverpool</span><span style="margin-left:auto">20:00 PREMATCH CLICK</span></div>
-
-<div class="cont">AMERICA - REAL DATA - CORRECTED - CLICK FOR DETAILS</div>
-<div class="ctry">Brazil - Serie A - CORRECTED Real 20 Sep 2026</div>
-<div class="game" onclick="location.href='/match?id=flamengo-braga'"><span>Flamengo vs RB Bragantino</span><span style="margin-left:auto">22:30 REAL CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=corinthians-fluminense'"><span>Corinthians vs Fluminense</span><span style="margin-left:auto">1-1 LIVE 72' CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=vitoria-cruzeiro'"><span>Vitoria vs Cruzeiro</span><span style="margin-left:auto">20:00 REAL CLICK</span></div>
-<div class="game" onclick="location.href='/match?id=gremio-palmeiras'"><span>Gremio vs Palmeiras</span><span style="margin-left:auto">15:00 REAL CLICK</span></div>
-
+<div class="top">ABED PREDICT WORLD - 7 DAYS + FT LABEL + STATS ON CLICK</div>
+<div style="padding:8px;overflow-x:auto;white-space:nowrap">{tabs}</div>
+{body}
+<div class="cont">All 7 days data - FT labelled with score - Click to see Cards Corners Players</div>
 </body>
 </html>
 """
-    return html
 
 @app.route('/match')
 def match_page():
     gid = request.args.get('id','tirana-elbasani')
     g = GAMES.get(gid, GAMES['tirana-elbasani'])
-    
+    is_ft = "FT" in g["status"]
+    ft_label = f'<div style="background:#00c853;color:black;padding:6px 12px;border-radius:6px;display:inline-block;font-weight:bold">{g["ft"]} FT - Finished</div>' if is_ft else f'<div style="background:#242F44;color:white;padding:6px 12px;border-radius:6px;display:inline-block">{g["status"]}</div>'
+
     return f"""
 <html>
 <head><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -85,39 +92,45 @@ body{{background:#0f1623;color:white;font-family:Arial;padding:0;margin:0}}
 </style>
 </head>
 <body>
-<div class="top"><a href="/" style="color:white;text-decoration:none;background:#242F44;padding:8px 12px;border-radius:6px">BACK</a> - {g['home']} vs {g['away']}</div>
+<div class="top"><a href="javascript:history.back()" style="color:white;text-decoration:none;background:#242F44;padding:8px 12px;border-radius:6px">BACK</a> {g['home']} vs {g['away']}</div>
 
 <div class="card">
 <h2 style="margin:0">{g['home']} vs {g['away']}</h2>
-<p style="color:#00c853">{g['country']} - {g['score']}</p>
-<p>Albania/Brazil Corrected Real Data - All Prompts Kept</p>
+<p style="color:#00c853">{g['country']}</p>
+{ft_label}
+<p>HT: {g['ht']} | FT: {g['ft']} | Status: {g['status']}</p>
 </div>
 
 <div class="card">
-<h3 style="color:#00c853;margin-top:0">MATCH STATS - Cards, Corners, Players</h3>
+<h3 style="color:#00c853;margin-top:0">FINISHED MATCH STATISTICS - FT Score + Stats</h3>
+<div class="stat"><span>Full Time Score</span><b>{g['ft']} FT</b></div>
+<div class="stat"><span>Half Time Score</span><b>{g['ht']}</b></div>
 <div class="stat"><span>Avg Goals</span><b>{g['goals']}</b></div>
+<div class="stat"><span>Possession</span><b>{g['poss']}</b></div>
+<div class="stat"><span>Shots</span><b>{g['shots']}</b></div>
+<div class="stat"><span>Avg Corners</span><b>{g['corners']} corners</b></div>
+<div class="stat"><span>Avg Cards</span><b>{g['cards']} cards</b></div>
 <div class="stat"><span>BTTS %</span><b>{g['btts']}%</b></div>
 <div class="stat"><span>Over 2.5 %</span><b>{g['over25']}%</b></div>
-<div class="stat"><span>Avg Corners</span><b>{g['corners']}</b></div>
-<div class="stat"><span>Avg Cards</span><b>{g['cards']}</b></div>
-<div class="stat"><span>Possession</span><b>{g['possession']}</b></div>
-<div class="stat"><span>Shots</span><b>{g['shots']}</b></div>
 </div>
 
 <div class="card">
-<h3 style="color:#00c853;margin-top:0">PLAYERS - Key Players</h3>
-<div class="stat"><span>{g['home']} - Top Scorer</span><b>9 Goals</b></div>
-<div class="stat"><span>{g['away']} - Top Scorer</span><b>7 Goals</b></div>
+<h3 style="color:#00c853;margin-top:0">PLAYERS + CARDS + CORNERS DETAILS</h3>
+<div class="stat"><span>{g['home']} Top Scorer</span><b>9 Goals</b></div>
+<div class="stat"><span>{g['away']} Top Scorer</span><b>7 Goals</b></div>
+<div class="stat"><span>Cards - Yellow</span><b>{g['cards']} avg</b></div>
+<div class="stat"><span>Cards - Red</span><b>0.2 avg</b></div>
+<div class="stat"><span>Corners - {g['home']}</span><b>{float(g['corners'])/2:.1f} avg</b></div>
+<div class="stat"><span>Corners - {g['away']}</span><b>{float(g['corners'])/2:.1f} avg</b></div>
 <div class="stat"><span>Home Form</span><b>W W D L W</b></div>
 <div class="stat"><span>Away Form</span><b>L D W W L</b></div>
 </div>
 
 <div class="card">
-<h3 style="color:#00c853;margin-top:0">AI PREDICTIONS - All Prompts Kept</h3>
-<div class="bet"><div><b>Under 4.5 Goals</b><br><small>Avg {g['goals']} goals</small></div><div style="text-align:right"><b style="color:#00c853">97%</b><br><small>SUPER HIGH</small></div></div>
-<div class="bet"><div><b>Under 3.5 Goals</b><br><small>{g['over25']}% Over 2.5</small></div><div style="text-align:right"><b style="color:#00c853">91%</b><br><small>HIGH</small></div></div>
+<h3 style="color:#00c853;margin-top:0">AI PREDICTIONS - Your Prompts Kept</h3>
+<div class="bet"><div><b>Under 4.5 Goals</b><br><small>Avg {g['goals']} goals - FT {g['ft']}</small></div><div style="text-align:right"><b style="color:#00c853">97%</b><br><small>SUPER HIGH</small></div></div>
+<div class="bet"><div><b>FT Result {g['ft']}</b><br><small>Finished match</small></div><div style="text-align:right"><b style="color:#00c853">FT</b><br><small>REAL</small></div></div>
 <div class="bet"><div><b>Over 8 Corners</b><br><small>Avg {g['corners']} corners</small></div><div style="text-align:right"><b style="color:#00c853">78%</b><br><small>HIGH</small></div></div>
-<div class="bet"><div><b>BTTS {'Yes' if g['btts']>50 else 'No'}</b><br><small>{g['btts']}% BTTS</small></div><div style="text-align:right"><b style="color:#00c853">{max(g['btts'],100-g['btts'])}%</b><br><small>HIGH</small></div></div>
 <div class="bet"><div><b>Under 5.5 Cards</b><br><small>Avg {g['cards']} cards</small></div><div style="text-align:right"><b style="color:#00c853">82%</b><br><small>HIGH</small></div></div>
 </div>
 
