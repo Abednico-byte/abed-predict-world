@@ -1,0 +1,32 @@
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0e1625;color:#cbd5e1;font-family:sans-serif;font-size:12px}
+.top{background:#1a2538;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:6px}
+.tabs{display:flex;gap:18px;padding:10px 12px;background:#1a2538;border-bottom:1px solid #2a3a56}.tab{color:#8da0bf;padding-bottom:4px;cursor:pointer}.tab.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
+.subs{display:flex;gap:14px;padding:10px 12px;background:#1f2e4a;overflow:auto;white-space:nowrap}.sub{color:#8da0bf;cursor:pointer;padding-bottom:4px}.sub.active{color:#fff;border-bottom:2px solid #22c55e;font-weight:700}
+.box{background:#1e2d4a}.row{display:grid;grid-template-columns:60px 1fr 60px;padding:12px;border-bottom:1px solid #23324e;text-align:center;align-items:center}.val{font-weight:800;color:#fff;font-size:14px}.mid{font-size:9px;color:#8da0bf;text-transform:uppercase}
+.lab{background:#0f172a;padding:8px;text-align:center;font-weight:800;color:#fff;margin-top:6px}
+.hide{display:none}
+</style></head><body>
+<div class="top"><a href="/league/{{lg.lid}}" style="color:#22c55e;text-decoration:none"> <- Back</a><div style="color:#8da0bf;margin-top:6px;font-size:11px">Sun 20th 14:00 🏆 {{lg.n}}</div><div class="m">{{game}}</div></div>
+<div class="tabs"><div class="tab active">Stats</div><div class="tab">Odds</div><div class="tab">Predictions</div></div>
+<div class="subs">
+<div class="sub active" id="s-general" onclick="showS('general')">General</div>
+<div class="sub" id="s-goals" onclick="showS('goals')">Goals</div>
+<div class="sub" id="s-corners" onclick="showS('corners')">Corners</div>
+<div class="sub" id="s-cards" onclick="showS('cards')">Cards</div>
+</div>
+<div id="tab-general"><div class="box">
+<div class="row"><div class="val">16</div><div class="mid">LEAGUE POS.</div><div class="val">9</div></div>
+<div class="row"><div class="val">2</div><div class="mid">PLAYED</div><div class="val">2</div></div>
+<div class="row"><div class="val">50%</div><div class="mid">WIN %</div><div class="val">50%</div></div>
+<div class="row"><div class="val">3</div><div class="mid">POINTS</div><div class="val">4</div></div>
+<div class="row"><div class="val">29.00</div><div class="mid">SHOTS (AVG)</div><div class="val">35.50</div></div>
+</div><div class="lab">Total Goals %</div><div class="box"><div class="row"><div class="val">100%</div><div class="mid">+0.5 GOALS %</div><div class="val">100%</div></div><div class="row"><div class="val">100%</div><div class="mid">+2.5 GOALS %</div><div class="val">100%</div></div><div class="row"><div class="val">0%</div><div class="mid">BTTS %</div><div class="val">100%</div></div></div><div class="lab">Corners</div><div class="box"><div class="row"><div class="val">12.00</div><div class="mid">TOTAL CORNERS PG</div><div class="val">9.00</div></div><div class="row"><div class="val">11</div><div class="mid">FOR TOTAL</div><div class="val">7</div></div></div></div></div>
+<div id="tab-goals" class="hide"><div class="box"><div class="row"><div class="val">4.00</div><div class="mid">AVG GOALS</div><div class="val">1.00</div></div><div class="row"><div class="val">4</div><div class="mid">SCORED</div><div class="val">1</div></div><div class="row"><div class="val">0</div><div class="mid">CONCEDED</div><div class="val">3</div></div></div></div>
+<div id="tab-corners" class="hide"><div class="box"><div class="row"><div class="val">12.00</div><div class="mid">TOTAL CORNERS PG</div><div class="val">9.00</div></div><div class="row"><div class="val">11</div><div class="mid">FOR TOTAL</div><div class="val">7</div></div><div class="row"><div class="val">11.00</div><div class="mid">FOR PG</div><div class="val">7.00</div></div></div></div>
+<div id="tab-cards" class="hide"><div class="box"><div class="row"><div class="val">3.00</div><div class="mid">AVG 2H CARDS</div><div class="val">0.00</div></div><div class="row"><div class="val">2.00</div><div class="mid">AVG RECIEVED 2H</div><div class="val">0.00</div></div></div></div>
+<div style="height:80px"></div>
+<script>
+function showS(n){document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));document.getElementById('tab-'+n).classList.remove('hide');document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));document.getElementById('s-'+n).classList.add('active');}
+</script>
+</body></html>
