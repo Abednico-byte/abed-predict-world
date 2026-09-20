@@ -1,66 +1,137 @@
-<!-- PLAYERS TAB - EVERYTHING OPEN -->
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0e1a2f;color:#cbd5e1;font-family:sans-serif;font-size:12px}
+.top{background:#132040;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;line-height:22px;margin-top:4px}
+.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px}.tab.active{color:#fff;border-bottom:3px solid #2ecc71}
+.subs{display:flex;gap:18px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap}.sub{color:#8da0bf;cursor:pointer;padding-bottom:5px;font-size:14px}.sub.active{color:#fff;border-bottom:3px solid #2ecc71;font-weight:700}
+.sec{background:#0c1830;padding:8px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
+.r{background:#1a2c4a;padding:10px 14px;border-bottom:1px solid #1e3354}.rtop{display:grid;grid-template-columns:65px 1fr 65px;text-align:center}.lv,.rv{font-weight:800;color:#fff;font-size:15px}.mid{font-size:10px;color:#8da0bf}
+.bar{height:6px;background:#233a5a;border-radius:10px;margin-top:6px;display:flex;position:relative}.bar .l{height:100%;background:#3b82f6}.bar .rbar{height:100%;background:#3b82f6;margin-left:auto}.bar::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#0e1a2f}
+.hide{display:none!important}
+.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:9px 12px;border-radius:10px;font-size:13px;position:relative;cursor:pointer}
+.pmenu{position:absolute;top:40px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:420px;overflow:auto;z-index:999;padding:8px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.6)}.pmenu.open{display:block}
+.pitem{padding:8px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:6px}.pitem:hover,.pitem.active{background:#2a4a6e;color:#2ecc71;font-weight:700}
+.pcat{font-size:11px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 12px;letter-spacing:.5px}
+.searchbox{width:calc(100% - 20px);background:#132040;border:1px solid #2a4362;color:#fff;padding:10px 12px;border-radius:10px;margin:10px}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#1a2c4a;border-bottom:1px solid #1e3354}
+.sbar{width:80px;height:6px;background:#233a5a;border-radius:10px;overflow:hidden}.sfill{height:100%;background:linear-gradient(90deg,#2ecc71,#3b82f6)}
+</style></head><body>
+<div class="top"><div style="color:#8da0bf;font-size:12px">Sun 20th 19:45 🏆 France Ligue 1</div><div class="m">Olympique Marseille<br>Paris Saint Germain</div></div>
+
+<div class="tabs">
+<div class="tab" onclick="showTop('create')">Create</div>
+<div class="tab active" id="t-stats" onclick="showTop('stats')">Stats</div>
+<div class="tab" onclick="showTop('odds')">Odds</div>
+<div class="tab" onclick="showTop('pred')">Predictions</div>
+</div>
+
+<div id="content-stats">
+<div class="subs">
+<div class="sub" onclick="showS('general')">General</div>
+<div class="sub" id="s-goals" onclick="showS('goals')">Goals</div>
+<div class="sub" onclick="showS('timing')">Timing</div>
+<div class="sub" onclick="showS('corners')">Corners</div>
+<div class="sub" id="s-more" onclick="toggleMore()">•••</div>
+<div class="sub" id="s-cards" onclick="showS('cards')" style="display:none">Cards</div>
+<div class="sub active" id="s-players" onclick="showS('players')">Players</div>
+</div>
+
+<div id="tab-general" class="hide"><div class="sec">General Stats</div><div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div></div></div>
+<div id="tab-goals" class="hide">
+<div class="sec">Overall vs Away</div>
+<div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div><div class="bar"><div class="l" style="width:52%"></div><div class="rbar" style="width:48%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+2.5 GOALS %</div><div class="rv">100%</div></div></div>
+</div>
+<div id="tab-timing" class="hide"><div class="sec">Timing</div><div class="r">1ST GOAL AVG 9.00 vs 15.33</div></div>
+<div id="tab-corners" class="hide"><div class="sec">Corners</div><div class="r">12.0 vs 9.0 PG</div></div>
+<div id="tab-cards" class="hide"><div class="sec">Cards</div><div class="r">AVG CARDS 4.00 vs 3.33</div></div>
+
+<!-- PLAYERS TAB - THIS IS YOUR SCREENSHOT - UNDER GAME -->
 <div id="tab-players">
 <div class="pfilter">
-<div class="pdrop" onclick="toggleMenu('m1')">📊 <span id="cat">Goals</span> ▾
-<div id="m1" class="pmenu">
-<div class="pcat">MATCH OUTCOMES</div>
+<div class="pdrop" id="d1" onclick="toggleMenu('m1')">📊 <span id="cat">Goals</span> ▾
+<div id="m1" class="pmenu open">
+<div class="pcat">● MATCH OUTCOMES</div>
 <div class="pitem" onclick="pick('Appearances')">Appearances</div>
 <div class="pitem" onclick="pick('Total Minutes')">Total Minutes</div>
 <div class="pitem" onclick="pick('Wins')">Wins</div>
-<div class="pitem" onclick="pick('Draws')">Draws</div>
-<div class="pitem" onclick="pick('Losses')">Losses</div>
-<div class="pitem" onclick="pick('Win Rate')">Win Rate</div>
-<div class="pitem" onclick="pick('Points')">Points</div>
-<div class="pitem" onclick="pick('Points / Game')">Points / Game</div>
-<div class="pitem" onclick="pick('Clean Sheets')">Clean Sheets</div>
-<div class="pitem" onclick="pick('Avg Rating')">Avg Rating</div>
-<div class="pcat">ATTACKING</div>
-<div class="pitem" onclick="pick('Goals')">Goals</div>
+<div class="pcat">● ATTACKING</div>
+<div class="pitem active" onclick="pick('Goals')">Goals</div>
 <div class="pitem" onclick="pick('Goals / Game')">Goals / Game</div>
-<div class="pitem" onclick="pick('Assists')">Assists</div>
-<div class="pitem" onclick="pick('Assists / Game')">Assists / Game</div>
-<div class="pcat">SHOOTING</div>
+<div class="pcat">● SHOOTING</div>
 <div class="pitem" onclick="pick('Shots')">Shots</div>
 <div class="pitem" onclick="pick('Shots / Game')">Shots / Game</div>
 <div class="pitem" onclick="pick('Shots On Target')">Shots On Target</div>
 <div class="pitem" onclick="pick('SoT / Game')">SoT / Game</div>
 <div class="pitem" onclick="pick('Shots Off Target')">Shots Off Target</div>
-<div class="pcat">PASSING</div>
+<div class="pcat">● PASSING</div>
 <div class="pitem" onclick="pick('Passes')">Passes</div>
 <div class="pitem" onclick="pick('Pass Accuracy')">Pass Accuracy</div>
 <div class="pitem" onclick="pick('Key Passes')">Key Passes</div>
-<div class="pitem" onclick="pick('Big Chances Created')">Big Chances Created</div>
-<div class="pcat">DEFENSIVE</div>
+<div class="pcat">● DEFENSIVE</div>
 <div class="pitem" onclick="pick('Tackles')">Tackles</div>
-<div class="pitem" onclick="pick('Tackles / Game')">Tackles / Game</div>
-<div class="pitem" onclick="pick('Interceptions')">Interceptions</div>
-<div class="pitem" onclick="pick('Interceptions / Game')">Interceptions / Game</div>
-<div class="pitem" onclick="pick('Blocks')">Blocks</div>
-<div class="pitem" onclick="pick('Blocks / Game')">Blocks / Game</div>
 <div class="pitem" onclick="pick('Clearances')">Clearances</div>
 <div class="pitem" onclick="pick('Duels')">Duels</div>
 <div class="pitem" onclick="pick('Duels Won')">Duels Won</div>
 <div class="pitem" onclick="pick('Aerials Won')">Aerials Won</div>
-<div class="pcat">DISCIPLINE</div>
+<div class="pcat">● DISCIPLINE</div>
 <div class="pitem" onclick="pick('Fouls')">Fouls</div>
 <div class="pitem" onclick="pick('Fouls / Game')">Fouls / Game</div>
 <div class="pitem" onclick="pick('Fouls Drawn')">Fouls Drawn</div>
-<div class="pitem" onclick="pick('Fouls Drawn / Game')">Fouls Drawn / Game</div>
 <div class="pitem" onclick="pick('Yellow Cards')">Yellow Cards</div>
-<div class="pitem" onclick="pick('Yellows / Game')">Yellows / Game</div>
-<div class="pitem" onclick="pick('Red Cards')">Red Cards</div>
 </div>
 </div>
-<div class="pdrop" onclick="toggleMenu('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Season 24/25</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Last 5 Games</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Last 10 Games</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Home Only</div><div class="pitem" onclick="document.getElementById('m2').classList.remove('open')">Away Only</div></div></div>
+<div class="pdrop" onclick="toggleMenu('m2')">🕐 <span>Season</span> ▾<div id="m2" class="pmenu"><div class="pitem">Season 24/25</div><div class="pitem">Last 10</div><div class="pitem">Home Only</div><div class="pitem">Away Only</div></div></div>
 </div>
-<input class="searchbox" placeholder="🔍 Search stats... (e.g. Goals, Tackles, Fouls)" onkeyup="filterP(this.value)" id="sbox">
-<div style="display:flex;justify-content:space-between;padding:8px 12px;color:#8da0bf;font-size:10px;font-weight:700"><div># PLAYER</div><div>STAT</div></div>
+
+<input class="searchbox" placeholder="🔍 Search stats..." onkeyup="filterP(this.value)">
+<div style="display:flex;justify-content:space-between;padding:6px 12px;color:#6b7f9e;font-size:10px;font-weight:700"><div></div><div>STAT</div></div>
+
 <div id="plist">
-<div class="prow" data-name="Gouiri Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">G</div><div><div style="color:#fff;font-weight:700">A. Gouiri</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">4</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
-<div class="prow" data-name="Torres Garcia PSG"><div class="pname"><div class="av" style="background:#8b1a1a">T</div><div><div style="color:#fff;font-weight:700">F. Torres Garcia</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">3</div><div class="sbar"><div class="sfill" style="width:75%"></div></div></div></div>
-<div class="prow" data-name="Aoas Correa PSG"><div class="pname"><div class="av" style="background:#8b1a1a">A</div><div><div style="color:#fff;font-weight:700">M. Aoás Corrêa</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
-<div class="prow" data-name="Hikram Abdallah Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">H</div><div><div style="color:#fff;font-weight:700">K. Hikram Abdallah</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
-<div class="prow" data-name="Hojbjerg Marseille"><div class="pname"><div class="av" style="background:#1c3a6a">H</div><div><div style="color:#fff;font-weight:700">P. Højbjerg</div><div style="font-size:10px;color:#8da0bf">Olympique Marseille</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
-<div class="prow" data-name="Machado Ferreira PSG"><div class="pname"><div class="av" style="background:#8b1a1a">M</div><div><div style="color:#fff;font-weight:700">V. Machado Ferreira</div><div style="font-size:10px;color:#8da0bf">Paris Saint Germain</div></div></div><div class="pstat"><div style="color:#fff;font-weight:800">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">A. Gouiri - Marseille</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">4</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">F. Torres Garcia - PSG</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">3</div><div class="sbar"><div class="sfill" style="width:75%;background:#4aa8ff"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">M. Aoás Corrêa - PSG</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">K. Hikram Abdallah - Marseille</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">P. Højbjerg - Marseille</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
+<div class="prow"><div style="color:#fff;font-weight:700">V. Machado Ferreira - PSG</div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff">1</div><div class="sbar"><div class="sfill" style="width:25%"></div></div></div></div>
 </div>
 </div>
+</div>
+
+<div id="content-odds" class="hide"><div class="sec">Odds</div></div>
+<div id="content-pred" class="hide"><div class="sec">Predictions</div></div>
+<div id="content-create" class="hide"><div class="sec">Create</div></div>
+
+<script>
+function showS(n){
+ document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));
+ document.getElementById('tab-'+n).classList.remove('hide');
+ document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));
+ let el=document.getElementById('s-'+n); if(el) el.classList.add('active');
+}
+function showTop(n){ /* keep stats */ }
+function toggleMenu(id){
+ let m=document.getElementById(id);
+ let open=m.classList.contains('open');
+ document.querySelectorAll('.pmenu').forEach(x=>x.classList.remove('open'));
+ if(!open) m.classList.add('open');
+}
+function pick(v){
+ document.getElementById('cat').innerText=v;
+ document.getElementById('m1').classList.remove('open');
+ document.querySelectorAll('.pitem').forEach(p=>p.classList.remove('active'));
+ event.target.classList.add('active');
+}
+function filterP(q){
+ q=q.toLowerCase();
+ document.querySelectorAll('#plist .prow').forEach(r=>{
+  r.style.display=r.innerText.toLowerCase().includes(q)?'flex':'none';
+ });
+}
+function toggleMore(){
+ let c=document.getElementById('s-cards');
+ c.style.display=c.style.display==='none'?'block':'none';
+ document.getElementById('s-more').classList.toggle('active');
+}
+showS('players');
+</script>
+</body></html>
