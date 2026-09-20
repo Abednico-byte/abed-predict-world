@@ -129,7 +129,12 @@ GAMES_BY_LEAGUE = {
 
 @app.route('/')
 def index():
-    return render_template('index.html', leagues=LEAGUES)
+    live_games = get_today_games_live()
+    return render_template('index.html', leagues=LEAGUES, live_games=live_games, today=dt.now().strftime("%Y-%m-%d"))
+
+@app.route('/api/today')
+def api_today():
+    return {"date": dt.now().strftime("%Y-%m-%d"), "games": get_today_games_live(), "sources": ["api-football", "football-data.org", "sofascore", "opta"]}
 
 @app.route('/league/<league_id>')
 def league_page(league_id):
