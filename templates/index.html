@@ -97,5 +97,20 @@ function openMatch(home,away,league,score,time,isLive,isFin){
 }
 function closeMatch(){document.getElementById('modal').style.display='none';}
 </script>
-
+<!-- ADD ONLY THIS - DO NOT DELETE ANYTHING ABOVE -->
+<div id="modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0b1222;z-index:999;display:none;overflow:auto">
+<div style="padding:12px;background:#1e293b;display:flex;justify-content:space-between"><div><div id="mScore" style="font-weight:900;color:#22c55e"></div><div id="mTeams" style="font-weight:900;font-size:18px"></div></div><div onclick="document.getElementById('modal').style.display='none'" style="font-size:30px;cursor:pointer">✕</div></div>
+<div style="margin:10px;background:#162032;border-radius:12px;padding:14px"><b>🤖 Abed AI Prediction</b><div style="margin-top:10px">Home 42% | Draw 27% | Away 30% | Over 2.5 58%</div></div>
+</div>
+<script>
+document.querySelectorAll('.match').forEach(m=>{
+  m.style.cursor='pointer';
+  m.addEventListener('click',()=>{
+    let teams = m.innerText.split('\n');
+    document.getElementById('mTeams').innerText = teams[0] || m.innerText.substring(0,30);
+    document.getElementById('mScore').innerText = m.innerText.match(/\d+-\d+/) || '0-0';
+    document.getElementById('modal').style.display='block';
+  });
+});
+</script>
 </body></html>
