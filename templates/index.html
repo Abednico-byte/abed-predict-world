@@ -11,16 +11,16 @@
 .leagues{display:none;background:#1a1a1a}.leagues.open{display:block}
 .lrow{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 14px 60px;border-top:1px solid #262626;text-decoration:none;color:#ddd;font-size:13px}
 .lrow:hover{background:#252525}.pin{color:#666}.badge{font-size:10px;padding:2px 6px;border-radius:6px;margin-left:6px}.PRO{background:#1f3a2e;color:#22c55e}.AMATEUR{background:#3a2e1f;color:#fbbf24}.CUP{background:#2e2a3a;color:#a78bfa}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:#1f1f1f;display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #2a2a2a}
-.bitem{color:#888;font-size:11px;text-align:center}.bitem.active{color:#22c55e}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#1f1f1f;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #2a2a2a}
+.bitem{color:#888;font-size:11px;text-align:center;flex:1}.bitem.active{color:#22c55e}
 </style></head><body>
-<div class="top"><div class="logo">A</div><div class="search">🔍 <input id="s" placeholder="Search ABED PREDICT WORLD..." onkeyup="filterC()"></div><span>🔔</span><span>👤</span></div>
+<div class="top"><div class="logo">A</div><div class="search">🔍 <input id="s" placeholder="Search ABED PREDICT WORLD..." onkeyup="filterC()"></div></div>
 
 <div id="list">
 {% for country, leagues in countries.items() %}
 <div class="country" data-c="{{country|lower}}">
 <button class="cheader" onclick="toggle('c{{loop.index}}')">
-<div style="display:flex;align-items:center;gap:12px"><div class="flag">{% if country=='Spain' %}🇪🇸{% elif country=='Greece' %}🇬🇷{% elif country=='Sweden' %}🇸🇪{% elif country=='England' %}🏴󠁧󠁢󠁥󠁮󠁧󠁿{% elif country=='Germany' %}🇩🇪{% elif country=='Belgium' %}🇧🇪{% elif country=='Belarus' %}🇧🇾{% elif country=='Botswana' %}🇧🇼{% elif country=='South Africa' %}🇿🇦{% else %}🏳️{% endif %}</div><div class="cname">{{country}}</div></div>
+<div style="display:flex;align-items:center;gap:12px"><div class="flag">{% if country=='Spain' %}🇪🇸{% elif country=='Greece' %}🇬🇷{% elif country=='Sweden' %}🇸🇪{% elif country=='England' %}🏴󠁧󠁢󠁥󠁮󠁧󠁿{% elif country=='Germany' %}🇩🇪{% elif country=='Belgium' %}🇧🇪{% elif country=='Botswana' %}🇧🇼{% elif country=='South Africa' %}🇿🇦{% else %}🏳️{% endif %}</div><div class="cname">{{country}}</div></div>
 <div class="arrow" id="a-c{{loop.index}}">⌄</div>
 </button>
 <div class="leagues" id="c{{loop.index}}">
@@ -32,7 +32,7 @@
 {% endfor %}
 </div>
 <div style="height:70px"></div>
-<div class="bottom"><div class="bitem active">⚽<br>Football</div><div class="bitem">☆<br>Favourites</div><div class="bitem">🔥<br>Never Miss</div><div class="bitem">🛡️<br>Fantasy</div></div>
+<div class="bottom"><div class="bitem active">⚽<br>Football</div><div class="bitem">☆<br>Favourites</div><div class="bitem">🔥<br>Never Miss</div></div>
 <script>
 function toggle(id){var el=document.getElementById(id);var ar=document.getElementById('a-'+id);el.classList.toggle('open');ar.innerHTML=el.classList.contains('open')?'⌃':'⌄';}
 function filterC(){var q=document.getElementById('s').value.toLowerCase();document.querySelectorAll('.country').forEach(function(c){c.style.display=c.dataset.c.includes(q)?'block':'none';});}
