@@ -1,1 +1,70 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>ABED PREDICT WORLD</title><style>body{background:#0f141e;color:#e2e8f0;font-family:sans-serif;margin:0}.h{background:#0b101a;padding:14px;position:sticky;top:0;z-index:9;border-bottom:1px solid #2a3650}.badge{background:#22c55e;color:#000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800}.card{background:#1b2333;border:1px solid #2a3650;border-radius:12px;padding:12px;margin:10px}.country{color:#fbbf24;font-weight:900;margin:14px 4px 8px;font-size:14px;letter-spacing:1px;border-bottom:1px solid #2a3650;padding-bottom:6px}.row{padding:11px 0;border-bottom:1px solid #1f2a3d;display:flex;justify-content:space-between;font-size:13px;color:#e2e8f0;text-decoration:none}.row:hover{background:#243047}.type{font-size:10px;padding:2px 6px;border-radius:6px}.PRO{background:#1f3a2e;color:#22c55e}.AMATEUR{background:#3a2e1f;color:#fbbf24}.CUP{background:#2e2a3a;color:#a78bfa}</style></head><body><div class=h><h2 style=margin:0>ABED PREDICT <span style=color:#22c55e>WORLD</span> <span class=badge>COUNTRY VIEW</span></h2><div style=font-size:11px;color:#94a3b8>Tap country → Pro / Amateur / Cup under it</div></div>{% for country, leagues in countries.items() %}<div class=card><div class=country>🌍 {{country}}</div>{% for l in leagues %}<a class=row href="/league/{{l.id}}"><span>{{l.n}} <span class="type {{l.type}}">{{l.type}}</span></span><span style=color:#22c55e>{{l.games|length}} games -></span></a>{% endfor %}</div>{% endfor %}</body></html>
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>ABED PREDICT WORLD</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#121212;color:#e2e8f0;font-family:Inter,sans-serif}
+.top{background:#1f1f1f;padding:12px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:99}
+.search{flex:1;background:#2a2a2a;border-radius:24px;padding:10px 16px;display:flex;align-items:center;gap:8px;color:#888}
+.search input{background:transparent;border:0;color:#fff;width:100%;outline:none}
+.country{background:#1e1e1e;margin:8px;border-radius:16px;overflow:hidden;border:1px solid #2a2a2a}
+.cheader{width:100%;background:#1e1e1e;border:0;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.cheader-left{display:flex;align-items:center;gap:12px}
+.flag{width:32px;height:32px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cname{font-weight:600;font-size:15px}.csub{font-size:11px;color:#888}
+.arrow{width:36px;height:36px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;transition:0.2s}
+.leagues{display:none;background:#1a1a1a}.leagues.open{display:block}
+.lrow{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 14px 60px;border-top:1px solid #262626;text-decoration:none;color:#ddd}
+.lrow:hover{background:#252525}.licon{width:24px;height:24px;margin-right:10px;display:flex;align-items:center}
+.pin{color:#666}
+.badge{font-size:10px;padding:2px 6px;border-radius:6px;margin-left:6px}.PRO{background:#1f3a2e;color:#22c55e}.AMATEUR{background:#3a2e1f;color:#fbbf24}.CUP{background:#2e2a3a;color:#a78bfa}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#1f1f1f;display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #2a2a2a}
+.bitem{color:#888;font-size:11px;text-align:center}.bitem.active{color:#fff}.bitem div{font-size:20px}
+</style></head><body>
+<div class="top"><span style="font-size:20px">⚡</span><div class="search">🔍 <input id="s" placeholder="Search Sofascore" onkeyup="filterC()"></div><span>🔔</span><span>👤</span></div>
+
+<div id="list">
+{% for country, leagues in countries.items() %}
+<div class="country" data-c="{{country|lower}}">
+<button class="cheader" onclick="toggle('c{{loop.index}}')">
+<div class="cheader-left">
+<div class="flag">
+{% if country=='Belarus' %}🇧🇾{% elif country=='Belgium' %}🇧🇪{% elif country=='Spain' %}🇪🇸{% elif country=='Greece' %}🇬🇷{% elif country=='Sweden' %}🇸🇪{% elif country=='England' %}🏴󠁧󠁢󠁥󠁮󠁧󠁿{% elif country=='Germany' %}🇩🇪{% elif country=='Italy' %}🇮🇹{% elif country=='France' %}🇫🇷{% elif country=='Botswana' %}🇧🇼{% elif country=='South Africa' %}🇿🇦{% else %}🏳️{% endif %}
+</div>
+<div style="text-align:left"><div class="cname">{{country}}</div>{% if 'Amateur' in leagues[0].n %}<div class="csub">Amateur</div>{% endif %}</div>
+</div>
+<div class="arrow" id="a-c{{loop.index}}">⌄</div>
+</button>
+<div class="leagues" id="c{{loop.index}}">
+{% for l in leagues %}
+<a class="lrow" href="/league/{{l.id}}">
+<div style="display:flex;align-items:center">
+<div class="licon">
+{% if l.type=='PRO' %}🛡️{% elif l.type=='PRO 2' %}⚽{% elif l.type=='AMATEUR' %}👥{% else %}🏆{% endif %}
+</div>
+<span>{{l.n.replace(country+' - ','')}}</span><span class="badge {{l.type}}">{{l.type}}</span>
+</div>
+<span class="pin">📌</span>
+</a>
+{% endfor %}
+</div>
+</div>
+{% endfor %}
+</div>
+
+<div style="height:70px"></div>
+<div class="bottom"><div class="bitem active"><div>⚽</div>Football</div><div class="bitem"><div>☆</div>Favourites</div><div class="bitem"><div>🔥</div>Never Miss</div><div class="bitem"><div>🛡️</div>Fantasy</div></div>
+
+<script>
+function toggle(id){
+ var el=document.getElementById(id);
+ var ar=document.getElementById('a-'+id);
+ el.classList.toggle('open');
+ ar.innerHTML=el.classList.contains('open')?'⌃':'⌄';
+}
+function filterC(){
+ var q=document.getElementById('s').value.toLowerCase();
+ document.querySelectorAll('.country').forEach(function(c){
+  c.style.display=c.dataset.c.includes(q)?'block':'none';
+ });
+}
+// auto open Belgium-like demo: open first 2
+document.addEventListener('DOMContentLoaded',function(){toggle('c2')});
+</script>
+</body></html>
