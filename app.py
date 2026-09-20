@@ -1,33 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ lg.n }}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:14px}
-.top{background:#132040;padding:12px 14px;border-bottom:1px solid #1e3354}
-.back{color:#22c55e;text-decoration:none;font-size:13px;font-weight:700}
-.title{font-size:18px;font-weight:800;color:#fff;margin-top:8px}
-.subtitle{font-size:11px;color:#8da0bf;margin-top:4px}
-.row{display:flex;justify-content:space-between;padding:14px;background:#1a2c4a;border-bottom:1px solid #1e3354;color:#fff;text-decoration:none}
-.time{color:#8da0bf;font-size:13px}
-.sec{background:#0c1830;padding:8px 14px;font-weight:800;color:#fff;font-size:11px;border-bottom:1px solid #1e3354}
-</style>
-</head>
-<body>
-<div class="top">
-<a href="/" class="back">← Back</a>
-<div class="title">{{ lg.n.replace('Spain - Spain - ','').replace('England - England - ','').replace(' - - ',' - ') }}</div>
-<div class="subtitle">{{ lg.n }} • All fixtures</div>
-</div>
-<div class="sec">MATCHES</div>
-{% if games %}
-  {% for g in games %}
-    <a class="row" href="/game/{{ g.id if g.id is defined else g }}"><span>{{ g.home if g.home is defined else g }}</span><span class="time">{{ g.time if g.time is defined else '' }} ›</span></a>
-  {% endfor %}
-{% else %}
-  <div style="padding:30px;text-align:center;color:#8da0bf">No fixtures found for {{ lg.n }} - Check app.py league filter</div>
-{% endif %}
-</body>
-</html>
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+LEAGUES = [
+    {"id": "england-premier-league", "n": "England - Premier League"},
+    {"id": "spain-laliga", "n": "Spain - LaLiga"},
+    {"id": "germany-bundesliga", "n": "Germany - Bundesliga"},
+    {"id": "italy-serie-a", "n": "Italy - Serie A"},
+    {"id": "france-ligue-1", "n": "France - Ligue 1"},
+    {"id": "netherlands-eredivisie", "n": "Netherlands - Eredivisie"},
+    {"id": "portugal-primeira", "n": "Portugal - Primeira Liga"},
+    {"id": "uefa-champions", "n": "Europe - Champions League"},
+]
+
+GAMES_BY_LEAGUE = {
+    "england-premier-league": [
+        {"id": "man-city-vs-arsenal", "home": "Man City vs Arsenal", "time": "17:30"},
+        {"id": "liverpool-vs-chelsea", "home": "Liverpool vs Chelsea", "time": "19:45"},
+        {"id": "man-utd-vs-tottenham", "home": "Man Utd vs Tottenham", "time": "14:00"},
+    ],
+    "spain-laliga": [
+        {"id": "atletico-vs-sevilla", "home": "Atletico vs Sevilla", "time": "17:00"},
+        {"id": "real-madrid-vs-barcelona", "home": "Real Madrid vs Barcelona", "time": "19:45"},
+        {"id": "barcelona-vs-sevilla", "home": "Barcelona vs Sevilla", "time": "18:30"},
+        {"id": "sevilla-vs-real-madrid", "home": "Sevilla vs Real Madrid", "time": "12:00"},
+    ],
+    "germany-bundesliga": [
+        {"id": "bayern-vs-dortmund", "home": "Bayern vs Dortmund", "time": "18:30"},
+        {"id": "leverkusen-vs-leipzig", "home": "Leverkusen vs Leipzig", "time": "15:30"},
+    ],
+    "italy-serie-a": [
+        {"id": "inter-vs-milan", "home": "Inter vs AC Milan", "time": "19:45"},
+        {"id": "juventus-vs-roma", "home": "Juventus vs Roma", "time": "17:00"},
+    ],
+    "france-ligue-1": [
+        {"id": "psg-vs-marseille", "home": "PSG vs Marseille", "time": "19:45"},
+        {"id": "lyon-vs-lille", "home": "Lyon vs Lille", "time": "17:00"},
+    ],
+    "netherlands-eredivisie": [
+        {"id": "ajax-vs-psv", "home": "Ajax vs PSV", "time": "16:45"},
+    ],
+    "portugal-primeira": [
+        {"id": "benfica-vs-porto", "home": "Benfica vs Porto", "time": "20:15"},
+    ],
+    "uefa-champions": [
+        {"id": "real-vs-city", "home": "Real Madrid vs Man City", "time": "21:00"},
+    ],
+}
+
+@app.route('/')
+def index():
+    return render_template('index.html', leagues=LEAGUES)
+
+@app.route('/league/<league_id>')
+def league_page(league_id):
+    league = next((l for l in LEAGUES if l["id"] == league_id), {"id": league_id, "n": league_id.replace("-", " ").title()})
+    games = GAMES_BY_LEAGUE.get(league_id, [])
+    return render_template('league.html', lg=league, games=games)
+
+@app.route('/game/<game_id>')
+def game_page(game_id):
+    name = game_id.replace("-", " ").title()
+    return render_template('game.html', game=name)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
