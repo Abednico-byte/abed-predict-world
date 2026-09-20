@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abed Predict - Unlocked</title>
+<style>
+body{background:#0f1623;color:white;font-family:Arial;margin:0;padding:10px}
+.card{background:#242F44;border-radius:12px;padding:14px;margin:10px 0}
+.top{font-size:20px;font-weight:bold}
+.badge{padding:3px 8px;border-radius:6px;font-size:12px}
+.green{background:#00c853} .yellow{background:#ffab00;color:black}
+.bar{height:8px;background:#333;border-radius:4px;overflow:hidden;margin:4px 0}
+.fill{height:100%;background:#FF8C00}
+.ai{background:#1e2a4a;border:1px solid #2D7FF9}
+table{width:100%;border-collapse:collapse} td,th{padding:6px;border-bottom:1px solid #333}
+</style>
+</head>
+<body>
+<div class="card top">{{fixture.home}} {{fixture.score}} {{fixture.away}} <small style="color:#2D7FF9">{{fixture.minute}} {{fixture.league}} LIVE</small></div>
+<div class="card ai">
+<h3>🧠 AI High Probability Bets - UNLOCKED</h3>
+{% for b in ai_bets %}
+<div style="display:flex;justify-content:space-between;margin:6px 0"><span>{{b.bet}} - {{b.reason}}</span><span class="badge {{b.color}}">{{b.prob}}% {{b.conf}}</span></div>
+<div class="bar"><div class="fill" style="width:{{b.prob}}%"></div></div>
+{% endfor %}
+<div style="margin-top:10px;color:#2D7FF9">Best Combo: BTTS No + Under 2.5 + Over 8 Corners = 68%</div>
+</div>
+<div class="card">
+<h3>H2H - {{h2h.win_pct.home}}% vs {{h2h.win_pct.away}}% - UNLOCKED</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div>📊 {{h2h.boxes.matches}} MATCHES</div><div>⚽ {{h2h.boxes.avg_goals}} AVG</div><div>🔄 {{h2h.boxes.btts_pct}}% BTTS</div><div>📈 {{h2h.boxes.over_25_pct}}% OVER 2.5</div><div>🚩 {{h2h.boxes.avg_corners}} CORNERS</div><div>🟨 {{h2h.boxes.avg_cards}} CARDS</div>
+</div>
+{% for m in h2h.matches %}<div style="margin-top:8px;border-top:1px solid #333">{{m.date}} {{m.home}} {{m.score}} {{m.away}} - Poss {{m.poss}} Cards {{m.cards}} Corners {{m.corners}}</div>{% endfor %}
+</div>
+<div class="card">
+<h3>📊 Probability Model - ALL UNLOCKED</h3>
+<p>Full-Time: HOME {{pred.full_time.home}}% DRAW {{pred.full_time.draw}}% AWAY {{pred.full_time.away}}%</p>
+<p>Double Chance: 1X {{pred.double_chance['1X']}}% | 12 {{pred.double_chance['12']}}% | X2 {{pred.double_chance.X2}}%</p>
+<p>Total Goals: Over 0.5 {{pred.total_goals.over_0_5}}% | Under 2.5 {{pred.total_goals.under_2_5}}% | Under 3.5 {{pred.total_goals.under_3_5}}% | Under 4.5 {{pred.total_goals.under_4_5}}%</p>
+<p>BTTS: YES {{pred.btts.yes}}% NO {{pred.btts.no}}%</p>
+<p>Corners: Over 8 {{pred.corners.over_8}}% Over 9 {{pred.corners.over_9}}% Over 10 {{pred.corners.over_10}}%</p>
+</div>
+<div class="card">
+<h3>Players - UNLOCKED (Win Rate, Clean Sheets, Rating)</h3>
+<table><tr><th>No</th><th>Name</th><th>Pos</th><th>Goals</th><th>Win%</th><th>Rating</th><th>xG</th><th>Form</th></tr>
+{% for p in players %}<tr><td>{{p.no}}</td><td>{{p.name}}</td><td>{{p.pos}}</td><td>{{p.goals}}</td><td>{{p.win_rate}}%</td><td>{{p.rating}}</td><td>{{p.xg}}</td><td>{{p.form}}</td></tr>{% endfor %}
+</table>
+</div>
+</body>
+</html>
