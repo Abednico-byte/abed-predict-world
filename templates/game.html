@@ -1,4 +1,41 @@
-<div id="tab-goals" class="hide">
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0e1a2f!important;color:#cbd5e1;font-family:sans-serif;font-size:12px}
+.top{background:#132040;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:4px}
+.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px}.tab.active{color:#fff;border-bottom:3px solid #2ecc71}
+.subs{display:flex;gap:16px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap}.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px}.sub.active{color:#fff;border-bottom:3px solid #2ecc71;font-weight:700}
+.sec{background:#0c1830;padding:9px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
+.r{background:#1a2c4a!important;padding:10px 14px;border-bottom:1px solid #1e3354}.rtop{display:flex;justify-content:space-between;align-items:center}.lv{font-weight:800;color:#fff;font-size:15px;min-width:50px;text-align:left}.rv{font-weight:800;color:#fff;font-size:15px;min-width:50px;text-align:right}.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
+.bar{height:6px;background:#233a5a;border-radius:10px;margin-top:8px;display:flex;position:relative;overflow:hidden}.l{height:100%;background:#3b82f6}.rbar{height:100%;background:#3b82f6;margin-left:auto}.bar::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#0e1a2f}
+.hide{display:none!important}
+.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:9px;border-radius:10px;font-size:13px;position:relative;cursor:pointer}
+.pmenu{position:absolute;top:40px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:400px;overflow:auto;z-index:999;padding:8px;display:none}.pmenu.open{display:block}
+.pitem{padding:8px 12px;color:#9bb0cc;font-size:12px;cursor:pointer;border-radius:6px}.pitem:hover{color:#2ecc71;background:#2a4a6e}
+.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:12px 0 4px 8px}
+.searchbox{width:calc(100% - 20px);background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;margin:10px;border-radius:10px}
+.prow{display:flex;justify-content:space-between;padding:12px;background:#1a2c4a;border-bottom:1px solid #1e3354}
+.sbar{width:80px;height:6px;background:#233a5a;border-radius:10px;overflow:hidden}.sfill{height:100%;background:#2ecc71}
+</style></head><body>
+<div class="top"><div style="color:#8da0bf;font-size:11px">Sun 20th 19:45 🏆 France Ligue 1</div><div class="m">{{game}}</div></div>
+<div class="tabs">
+<div class="tab" onclick="showTop('create')">Create</div>
+<div class="tab active" onclick="showTop('stats')">Stats</div>
+<div class="tab" onclick="showTop('odds')">Odds</div>
+<div class="tab" onclick="showTop('pred')">Predictions</div>
+</div>
+<div id="content-stats">
+<div class="subs">
+<div class="sub" id="s-general" onclick="showS('general')">General</div>
+<div class="sub active" id="s-goals" onclick="showS('goals')">Goals</div>
+<div class="sub" id="s-timing" onclick="showS('timing')">Timing</div>
+<div class="sub" id="s-corners" onclick="showS('corners')">Corners</div>
+<div class="sub" id="s-cards" onclick="showS('cards')">Cards</div>
+<div class="sub" id="s-players" onclick="showS('players')">Players</div>
+</div>
+
+<div id="tab-general" class="hide"><div class="sec">General</div><div class="r"><div class="rtop"><div class="lv">16</div><div class="mid">LEAGUE POS</div><div class="rv">9</div></div></div></div>
+
+<div id="tab-goals">
 <div class="sec">Stats Overall vs Away</div>
 <div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div><div class="bar"><div class="l" style="width:52%"></div><div class="rbar" style="width:48%"></div></div></div>
 <div class="r"><div class="rtop"><div class="lv">8</div><div class="mid">SCORED</div><div class="rv">1</div></div><div class="bar"><div class="l" style="width:88%"></div><div class="rbar" style="width:12%"></div></div></div>
@@ -8,24 +45,46 @@
 
 <div class="sec">Outcome %</div>
 <div class="r"><div class="rtop"><div class="lv">0%</div><div class="mid">FAILED TO SCORE</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:0%"></div><div class="rbar" style="width:0%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">0%</div><div class="mid">0-0 %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:0%"></div><div class="rbar" style="width:0%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">0%</div><div class="mid">0-0 %</div><div class="rv">0%</div></div></div>
 <div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">CLEAN SHEET %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:33%"></div><div class="rbar" style="width:0%"></div></div></div>
 <div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:40%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS & +2.5 %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:40%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">BTTS OR +2.5 %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS & +2.5 %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">BTTS OR +2.5 %</div><div class="rv">100%</div></div></div>
 
 <div class="sec">Total Goals %</div>
 <div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+0.5 GOALS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+1.5 GOALS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+2.5 GOALS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+3.5 GOALS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+1.5 GOALS %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+2.5 GOALS %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+3.5 GOALS %</div><div class="rv">100%</div></div></div>
 
 <div class="sec">Goals Scored %</div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">SCORED +0.5 %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">SCORED +1.5 %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:0%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">SCORED +2.5 %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:33%"></div><div class="rbar" style="width:0%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">SCORED +0.5 %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">SCORED +1.5 %</div><div class="rv">0%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">SCORED +2.5 %</div><div class="rv">0%</div></div></div>
 
 <div class="sec">Goals Conceded %</div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">CONCEDED +0.5 %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:67%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">CONCEDED +1.5 %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:33%"></div><div class="rbar" style="width:100%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">CONCEDED +0.5 %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">CONCEDED +1.5 %</div><div class="rv">100%</div></div></div>
 </div>
+
+<div id="tab-timing" class="hide"><div class="sec">Timing</div><div class="r">1ST GOAL AVG 9.00 vs 15.33</div></div>
+<div id="tab-corners" class="hide"><div class="sec">Corners</div><div class="r">Corners PG 12.0 vs 9.0</div></div>
+<div id="tab-cards" class="hide"><div class="sec">Cards</div><div class="r">AVG CARDS 4.00 vs 3.33</div></div>
+<div id="tab-players" class="hide">
+<div class="pfilter">
+<div class="pdrop" onclick="toggleMenu('m1')">📊 Goals ▾<div id="m1" class="pmenu"><div class="pcat">ATTACKING</div><div class="pitem">Goals</div><div class="pitem">Goals / Game</div><div class="pcat">SHOOTING</div><div class="pitem">Shots</div><div class="pitem">Shots On Target</div><div class="pcat">PASSING</div><div class="pitem">Passes</div><div class="pitem">Key Passes</div><div class="pcat">DEFENSIVE</div><div class="pitem">Tackles</div><div class="pitem">Duels</div><div class="pcat">DISCIPLINE</div><div class="pitem">Fouls</div><div class="pitem">Yellow Cards</div></div></div>
+<div class="pdrop">🕐 Season ▾</div>
+</div>
+<input class="searchbox" placeholder="🔍 Search stats...">
+<div class="prow"><div>A. Gouiri</div><div>4</div></div>
+<div class="prow"><div>F. Torres Garcia</div><div>3</div></div>
+</div>
+
+</div>
+<script>
+function showS(n){document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));document.getElementById('tab-'+n).classList.remove('hide');document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));document.getElementById('s-'+n).classList.add('active');}
+function showTop(n){}
+function toggleMenu(id){document.getElementById(id).classList.toggle('open');}
+showS('goals');
+</script>
+</body></html>
