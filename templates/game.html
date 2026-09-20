@@ -148,7 +148,6 @@ function loadPlayersForGame(){
   });
   document.getElementById('plist').innerHTML=html;
 }
-}
 function showS(n){
   document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));
   document.getElementById('tab-'+n).classList.remove('hide');
@@ -174,4 +173,12 @@ function filterPlayers(){
 }
 document.addEventListener('click',function(e){if(!e.target.closest('.pdrop')){document.querySelectorAll('.pmenu').forEach(x=>x.classList.remove('open'));}});
 showTop('stats');showS('players');loadPlayersForGame();
+// FORCE UNLOCK
+setTimeout(()=>{
+  document.querySelectorAll('.tab,.sub').forEach(el=>{
+    el.style.pointerEvents='auto';
+    el.style.opacity='1';
+  });
+  showTop('stats');showS('players');
+},200);
 </script></body></html>
