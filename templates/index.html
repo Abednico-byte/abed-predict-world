@@ -1,56 +1,12 @@
-<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Abed - All Leagues Cups Amateur</title>
-<style>
-body{background:#0f172a;color:#fff;font-family:Arial;margin:0;padding-bottom:90px}
-.top{background:#1e293b;padding:12px;position:sticky;top:0;z-index:20}
-.cont{background:#0b1222;padding:11px 14px;font-weight:900;border-top:2px solid #22c55e}
-.league-bar{background:#162032;padding:12px 14px;font-weight:bold;display:flex;justify-content:space-between;cursor:pointer;border-bottom:1px solid #1e293b}
-.league-details{background:#0f172a;padding:10px 14px;display:none}
-.team-pill{display:inline-block;background:#1e293b;padding:5px 10px;border-radius:20px;margin:3px;font-size:11px}
-.type-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:#334155}
-.match{background:#111c33;padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;display:flex;justify-content:space-between}
-.badge-live{background:#ef4444;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:bold}
-.badge-ft{background:#334155;padding:2px 6px;border-radius:4px;font-size:11px}
-#modal{position:fixed;top:0;left:0;right:0;bottom:0;background:#0b1222;z-index:9999;display:none;overflow:auto}
-</style></head><body>
-<div class="top"><b>🌍 Abed Predictor - All Leagues + Cups + Amateur - {{ today }}</b></div>
-{% for continent, leagues in grouped_games.items() %}
-<div class="cont">🌍 {{ continent }} - {{ leagues|length }} Competitions</div>
-{% for lkey, data in leagues.items() %}
-<div class="league-bar" onclick="document.getElementById('d{{ loop.index }}{{ continent|replace(' ','') }}').style.display = document.getElementById('d{{ loop.index }}{{ continent|replace(' ','') }}').style.display=='none'?'block':'none'">
-<span>{{ data.type }} {{ data.country }} - {{ data.league }}</span><span>▼ {{ data.games|length }}</span>
-</div>
-<div class="league-details" id="d{{ loop.index }}{{ continent|replace(' ','') }}">
-<div><b>👕 Teams:</b><br>{% for tm in data.teams %}<span class="team-pill" onclick="openTeam('{{ tm }}','{{ data.league }}')" style="cursor:pointer;border:1px solid #22c55e">{{ tm }} ↗</span>{% endfor %}</div>
-<div style="margin:10px 0"><b>⚽ Top Players:</b>{% for s in data.scorers %}<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e293b;font-size:13px"><span>{{ s.name }}</span><b>{{ s.goals }} goals</b></div>{% endfor %}</div>
-<div style="margin:8px 0;background:#111c33;border-radius:8px;padding:8px;font-size:12px"><b>📊 Stats:</b> Table, Form, Avg Goals, BTTS - All included</div>
-{% for g in data.games %}
-<div class="match" onclick="openMatch('{{ g.home }}','{{ g.away }}','{{ data.country }} - {{ data.league }}','{{ g.score }}','{{ g.time }}')">
-<span style="font-weight:700">{{ g.home }} vs {{ g.away }}</span>
-<span>{% if g.finished %}<span class="badge-ft">FT {{ g.score }}</span>{% elif g.live %}<span class="badge-live">LIVE</span>{% else %}{{ g.time }}{% endif %}</span>
-</div>
-{% endfor %}
-</div>
-{% endfor %}
-{% endfor %}
-<div id="modal"><div style="padding:12px;background:#1e293b;display:flex;justify-content:space-between"><div><div id="mScore" style="font-weight:900;color:#22c55e;font-size:22px"></div><div id="mLeague" style="font-size:12px;color:#94a3b8"></div><div id="mTeams" style="font-weight:900;font-size:18px"></div></div><div onclick="closeM()" style="font-size:32px;cursor:pointer">✕</div></div>
-<div style="margin:10px;background:#162032;border-radius:12px;padding:14px"><b>⚡ Pressure + Stats + Players - Clickable Data Inside</b></div></div>
-<script>
-function openMatch(h,a,l,s,t){document.getElementById('mTeams').innerText=h+' vs '+a;document.getElementById('mLeague').innerText=l;document.getElementById('mScore').innerText=s+' '+t;document.getElementById('modal').style.display='block';}
-function closeM(){document.getElementById('modal').style.display='none';}
-function openTeam(team, league){
-  document.getElementById('mTeams').innerText = team;
-  document.getElementById('mLeague').innerText = league + ' - Squad & Form';
-  document.getElementById('mScore').innerText = '👕 ' + team + ' - 5W 2D 1L';
-  document.getElementById('modal').style.display='block';
-}
-function openPlayer(name, goals){
-  document.getElementById('mTeams').innerText = name;
-  document.getElementById('mLeague').innerText = 'Top Scorer Stats';
-  document.getElementById('mScore').innerText = goals + ' Goals - 24 Apps';
-  document.getElementById('modal').style.display='block';
-}
-<div onclick="openPlayer('{{ s.name }}','{{ s.goals }}')" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px;cursor:pointer"><span>{{ s.name }} ↗</span><b>{{ s.goals }} goals</b></div>  
-</script>
-  
+<!DOCTYPE html>
+<html><body style="background:#0f172a;color:#fff;font-family:Arial;padding:20px">
+<h1>✅ SITE IS FIXED - SAFE MODE</h1>
+<p>If you see this, the 500 error is gone!</p>
+<p>Time: Now</p>
+<h2>🌍 Europe - Spain LaLiga</h2>
+<div style="background:#111c33;padding:10px;margin:5px">Getafe vs Malaga - 1-0 FT</div>
+<div style="background:#111c33;padding:10px;margin:5px">Atletico vs Real Madrid - 09-22 20:00</div>
+<h2>🌍 Africa - PSL</h2>
+<div style="background:#111c33;padding:10px;margin:5px">Sundowns vs Pirates - 09-21 19:00</div>
+<p style="color:#22c55e">Next step: we add back 7 days data</p>
 </body></html>
