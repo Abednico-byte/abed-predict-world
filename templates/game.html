@@ -1,23 +1,23 @@
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{game}}</title><style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12px}
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12px}
 .top{background:#132040;padding:12px}.m{font-size:18px;font-weight:800;color:#fff;margin-top:4px}
-.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px}.tab.active{color:#fff;border-bottom:3px solid #22c55e}
-.subs{display:flex;gap:14px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap;position:sticky;top:0;z-index:10}.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px}.sub.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
+.tabs{display:flex;gap:20px;padding:12px 14px;background:#132040;border-bottom:1px solid #1e3354;overflow:auto}.tab{color:#8da0bf;font-size:15px;font-weight:600;cursor:pointer;padding-bottom:6px;white-space:nowrap;user-select:none}.tab.active{color:#fff;border-bottom:3px solid #22c55e}
+.subs{display:flex;gap:14px;padding:10px 14px;background:#1b2e4e;overflow:auto;white-space:nowrap;position:sticky;top:0;z-index:50}.sub{color:#8da0bf;cursor:pointer;font-size:13px;padding-bottom:5px;user-select:none}.sub.active{color:#fff;border-bottom:3px solid #22c55e;font-weight:700}
 .sec{background:#0c1830;padding:9px;text-align:center;font-weight:800;color:#fff;font-size:11px;border-top:1px solid #1e3354;border-bottom:1px solid #1e3354}
-.r{background:#1a2c4a;padding:11px 14px;border-bottom:1px solid #1e3354}.rtop{display:flex;justify-content:space-between;align-items:center}.lv{font-weight:800;color:#fff;font-size:14px;min-width:45px}.rv{font-weight:800;color:#fff;font-size:14px;min-width:45px;text-align:right}.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
+.r{background:#1a2c4a;padding:11px 14px;border-bottom:1px solid #1e3354;cursor:pointer}.rtop{display:flex;justify-content:space-between;align-items:center}.lv{font-weight:800;color:#fff;font-size:14px;min-width:45px}.rv{font-weight:800;color:#fff;font-size:14px;min-width:45px;text-align:right}.mid{flex:1;font-size:10px;color:#8da0bf;text-transform:uppercase;text-align:center}
 .bar{height:6px;background:#233a5a;border-radius:10px;margin-top:8px;display:flex;position:relative;overflow:hidden}.l{height:100%;background:#3b82f6}.rbar{height:100%;background:#3b82f6;margin-left:auto}.bar:after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#0e1a2f}
 .hide{display:none!important}
-.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;border-radius:10px;font-size:13px;position:relative;cursor:pointer}
-.pmenu{position:absolute;top:42px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:450px;overflow:auto;z-index:999;padding:8px;display:none}.pmenu.open{display:block}
-.pitem{padding:9px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:6px}.pitem:hover{color:#22c55e;background:#2a4a6e}.pitem.active{color:#fff;background:#2a4a6e}
-.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 8px}
+.pfilter{display:flex;gap:10px;padding:10px;background:#1b2e4e;position:sticky;top:38px;z-index:40}.pdrop{flex:1;background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;border-radius:12px;font-size:13px;cursor:pointer;position:relative;user-select:none}
+.pmenu{position:absolute;top:45px;left:0;right:0;background:#1e3455;border:1px solid #2a4362;border-radius:12px;max-height:420px;overflow:auto;z-index:9999;padding:8px;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}.pmenu.open{display:block}
+.pitem{padding:10px 12px;color:#9bb0cc;font-size:13px;cursor:pointer;border-radius:8px}.pitem:hover{color:#22c55e;background:#2a4a6e}.pitem.active{color:#22c55e;background:#2a4a6e;font-weight:700}
+.pcat{font-size:10px;color:#6b7f9e;font-weight:800;margin:14px 0 4px 8px;letter-spacing:.5px}
 .searchbox{width:calc(100% - 20px);background:#132040;border:1px solid #2a4362;color:#fff;padding:10px;margin:10px;border-radius:10px}
-.prow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#1a2c4a;border-bottom:1px solid #1e3354;cursor:pointer}.prow:hover{background:#223a5e}
 .sbar{width:90px;height:6px;background:#233a5a;border-radius:10px;overflow:hidden}.sfill{height:100%;background:#22c55e}
 .pname{color:#fff;font-weight:700;font-size:13px}.pteam{color:#6b7f9e;font-size:11px}
 </style></head><body>
-<div class="top"><div style="color:#8da0bf;font-size:11px">Sun 20th 19:45 🏆 France Ligue 1</div><div class="m">{{game}}</div></div>
+<div class="top"><div style="color:#8da0bf;font-size:11px">Today 19:45 🏆 LaLiga</div><div class="m">{{game}}</div></div>
+
 <div class="tabs">
 <div class="tab" id="t-create" onclick="showTop('create')">Create</div>
 <div class="tab active" id="t-stats" onclick="showTop('stats')">Stats</div>
@@ -28,37 +28,29 @@ body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12p
 <div id="content-stats">
 <div class="subs">
 <div class="sub" id="s-general" onclick="showS('general')">General</div>
-<div class="sub active" id="s-goals" onclick="showS('goals')">Goals</div>
+<div class="sub" id="s-goals" onclick="showS('goals')">Goals</div>
 <div class="sub" id="s-timing" onclick="showS('timing')">Timing</div>
 <div class="sub" id="s-corners" onclick="showS('corners')">Corners</div>
 <div class="sub" id="s-cards" onclick="showS('cards')">Cards</div>
-<div class="sub" id="s-players" onclick="showS('players')">Players</div>
+<div class="sub active" id="s-players" onclick="showS('players')">Players</div>
 </div>
 
 <div id="tab-general" class="hide">
-<div class="sec">General</div>
-<div class="r"><div class="rtop"><div class="lv">2</div><div class="mid">LEAGUE POS</div><div class="rv">1</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">4</div><div class="mid">PLAYED</div><div class="rv">4</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">WIN %</div><div class="rv">75%</div></div><div class="bar"><div class="l" style="width:50%"></div><div class="rbar" style="width:75%"></div></div></div>
+<div class="sec">General - Overall vs Away</div>
+<div class="r"><div class="rtop"><div class="lv">2</div><div class="mid">LEAGUE POS</div><div class="rv">5</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">4</div><div class="mid">PLAYED</div><div class="rv">1</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">WIN %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:50%"></div><div class="rbar" style="width:0%"></div></div></div>
 </div>
 
-<div id="tab-goals">
+<div id="tab-goals" class="hide">
 <div class="sec">Stats Overall vs Away</div>
 <div class="r"><div class="rtop"><div class="lv">4.33</div><div class="mid">AVG GOALS</div><div class="rv">4.00</div></div><div class="bar"><div class="l" style="width:52%"></div><div class="rbar" style="width:48%"></div></div></div>
 <div class="r"><div class="rtop"><div class="lv">8</div><div class="mid">SCORED</div><div class="rv">1</div></div><div class="bar"><div class="l" style="width:88%"></div><div class="rbar" style="width:12%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">2.67</div><div class="mid">SCORED PG</div><div class="rv">1.00</div></div><div class="bar"><div class="l" style="width:72%"></div><div class="rbar" style="width:27%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">5</div><div class="mid">CONCEDED</div><div class="rv">3</div></div><div class="bar"><div class="l" style="width:62%"></div><div class="rbar" style="width:38%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">1.67</div><div class="mid">CONCEDED PG</div><div class="rv">3.00</div></div><div class="bar"><div class="l" style="width:35%"></div><div class="rbar" style="width:65%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">2.67</div><div class="mid">SCORED PG</div><div class="rv">1.00</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">5</div><div class="mid">CONCEDED</div><div class="rv">3</div></div></div>
 <div class="sec">Outcome %</div>
-<div class="r"><div class="rtop"><div class="lv">0%</div><div class="mid">FAILED TO SCORE</div><div class="rv">0%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">CLEAN SHEET %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:33%"></div><div class="rbar" style="width:0%"></div></div></div>
 <div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:67%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">BTTS & +2.5 %</div><div class="rv">100%</div></div></div>
-<div class="sec">Total Goals %</div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+0.5 GOALS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+1.5 GOALS %</div><div class="rv">100%</div></div></div>
 <div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+2.5 GOALS %</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+3.5 GOALS %</div><div class="rv">100%</div></div></div>
 </div>
 
 <div id="tab-timing" class="hide">
@@ -67,57 +59,39 @@ body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12p
 <div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">0-15' GOAL %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:67%"></div><div class="rbar" style="width:100%"></div></div></div>
 <div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">16-30' GOAL %</div><div class="rv">0%</div></div></div>
 <div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">31-45' GOAL %</div><div class="rv">0%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">46-60' GOAL %</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">61-75' GOAL %</div><div class="rv">100%</div></div></div>
 <div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">76-90' GOAL %</div><div class="rv">100%</div></div></div>
-<div class="sec">Half Performance</div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">GOALS AFTER 70'</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">SCORED IN 2H</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">MOST GOALS - 2ND HALF</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">LEADING AT HT %</div><div class="rv">0%</div></div></div>
 </div>
 
 <div id="tab-corners" class="hide">
 <div class="sec">Corners - Overall vs Away</div>
 <div class="r"><div class="rtop"><div class="lv">12.0</div><div class="mid">TOTAL CORNERS PG</div><div class="rv">9.0</div></div><div class="bar"><div class="l" style="width:57%"></div><div class="rbar" style="width:43%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">7.5</div><div class="mid">CORNERS FOR PG</div><div class="rv">3.0</div></div><div class="bar"><div class="l" style="width:71%"></div><div class="rbar" style="width:28%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">4.5</div><div class="mid">CORNERS AGAINST PG</div><div class="rv">6.0</div></div></div>
-<div class="sec">Corners Over %</div>
-<div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+7.5 CORNERS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:100%"></div></div></div>
+<div class="r"><div class="rtop"><div class="lv">7.5</div><div class="mid">CORNERS FOR PG</div><div class="rv">3.0</div></div></div>
 <div class="r"><div class="rtop"><div class="lv">100%</div><div class="mid">+8.5 CORNERS %</div><div class="rv">100%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">67%</div><div class="mid">+9.5 CORNERS %</div><div class="rv">33%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">33%</div><div class="mid">+10.5 CORNERS %</div><div class="rv">33%</div></div></div>
 </div>
 
 <div id="tab-cards" class="hide">
 <div class="sec">Cards - Overall vs Away</div>
 <div class="r"><div class="rtop"><div class="lv">4.00</div><div class="mid">AVG CARDS PG</div><div class="rv">3.33</div></div><div class="bar"><div class="l" style="width:54%"></div><div class="rbar" style="width:45%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">2.3</div><div class="mid">YELLOW CARDS PG</div><div class="rv">2.0</div></div><div class="bar"><div class="l" style="width:53%"></div><div class="rbar" style="width:46%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">0.33</div><div class="mid">RED CARDS PG</div><div class="rv">0.33</div></div></div>
-<div class="sec">Cards Over %</div>
-<div class="r"><div class="rtop"><div class="lv">75%</div><div class="mid">+2.5 CARDS %</div><div class="rv">100%</div></div><div class="bar"><div class="l" style="width:43%"></div><div class="rbar" style="width:100%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">75%</div><div class="mid">+3.5 CARDS %</div><div class="rv">33%</div></div><div class="bar"><div class="l" style="width:69%"></div><div class="rbar" style="width:31%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">+4.5 CARDS %</div><div class="rv">0%</div></div><div class="bar"><div class="l" style="width:100%"></div><div class="rbar" style="width:0%"></div></div></div>
-<div class="r"><div class="rtop"><div class="lv">25%</div><div class="mid">+5.5 CARDS %</div><div class="rv">0%</div></div></div>
-<div class="r"><div class="rtop"><div class="lv">25%</div><div class="mid">RED CARD %</div><div class="rv">33%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">75%</div><div class="mid">+2.5 CARDS %</div><div class="rv">100%</div></div></div>
+<div class="r"><div class="rtop"><div class="lv">50%</div><div class="mid">+4.5 CARDS %</div><div class="rv">0%</div></div></div>
 </div>
 
-<div id="tab-players" class="hide">
+<div id="tab-players">
 <div class="pfilter">
-<div class="pdrop" onclick="toggleM('m1')"><span id="selStat">📊 Goals</span> ▾
+<div class="pdrop" onclick="toggleM('m1')"><span id="selStat">📊 Shots</span> ▾
 <div id="m1" class="pmenu">
 <div class="pcat">ATTACKING</div>
 <div class="pitem" onclick="setStat('Goals')">Goals</div>
 <div class="pitem" onclick="setStat('Goals / Game')">Goals / Game</div>
 <div class="pitem" onclick="setStat('Assists')">Assists</div>
 <div class="pcat">SHOOTING</div>
-<div class="pitem" onclick="setStat('Shots')">Shots</div>
+<div class="pitem active" onclick="setStat('Shots')">Shots</div>
 <div class="pitem" onclick="setStat('Shots On Target')">Shots On Target</div>
 <div class="pitem" onclick="setStat('SoT / Game')">SoT / Game</div>
 <div class="pcat">PASSING</div>
 <div class="pitem" onclick="setStat('Passes')">Passes</div>
 <div class="pitem" onclick="setStat('Key Passes')">Key Passes</div>
-<div class="pitem" onclick="setStat('Pass Accuracy')">Pass Accuracy %</div>
+<div class="pitem" onclick="setStat('Pass Accuracy %')">Pass Accuracy %</div>
 <div class="pcat">DEFENSIVE</div>
 <div class="pitem" onclick="setStat('Tackles')">Tackles</div>
 <div class="pitem" onclick="setStat('Clearances')">Clearances</div>
@@ -127,37 +101,19 @@ body{background:#0e1a2f;color:#cbd5e1;font-family:Inter,sans-serif;font-size:12p
 <div class="pcat">DISCIPLINE</div>
 <div class="pitem" onclick="setStat('Fouls')">Fouls</div>
 <div class="pitem" onclick="setStat('Yellow Cards')">Yellow Cards</div>
-<div class="pitem" onclick="setStat('Red Cards')">Red Cards</div>
 </div></div>
-<div class="pdrop" onclick="toggleM('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem">2024/25 Season</div><div class="pitem">Last 10 Matches</div><div class="pitem">Home Only</div><div class="pitem">Away Only</div></div></div>
+<div class="pdrop" onclick="toggleM('m2')">🕐 Season ▾<div id="m2" class="pmenu"><div class="pitem active">2024/25 Season</div><div class="pitem">Last 5 Games</div><div class="pitem">Home Only</div><div class="pitem">Away Only</div></div></div>
 </div>
 <input class="searchbox" id="pSearch" oninput="filterPlayers()" placeholder="🔍 Search player...">
 
 <div id="plist">
-<div class="prow"><div><div class="pname">M. Greenwood</div><div class="pteam">Marseille • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">4</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
-<div class="prow"><div><div class="pname">F. Torres Garcia</div><div class="pteam">PSG • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">3</div><div class="sbar"><div class="sfill" style="width:75%"></div></div></div></div>
-<div class="prow"><div><div class="pname">A. Gouiri</div><div class="pteam">Marseille • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
-<div class="prow"><div><div class="pname">M. Aoás Corrêa</div><div class="pteam">PSG • Defender</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
-<div class="prow"><div><div class="pname">O. Dembélé</div><div class="pteam">PSG • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
-<div class="prow"><div><div class="pname">V. Jr. - Real Madrid</div><div class="pteam">Real Madrid • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">5</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Bellingham - Real Madrid</div><div class="pteam">Real Madrid • Midfield</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">4</div><div class="sbar"><div class="sfill" style="width:80%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Lukebakio - Sevilla</div><div class="pteam">Sevilla • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">3</div><div class="sbar"><div class="sfill" style="width:60%"></div></div></div></div>
-<div class="prow"><div><div class="pname">Isaac Romero - Sevilla</div><div class="pteam">Sevilla • Forward</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">2</div><div class="sbar"><div class="sfill" style="width:40%"></div></div></div></div>
-</div>
-
-</div>
-</div>
-
-<div id="content-odds" class="hide"><div class="sec">Odds</div><div class="r"><div class="rtop"><div class="lv">2.10</div><div class="mid">1 - HOME</div><div class="rv">45%</div></div></div><div class="r"><div class="rtop"><div class="lv">3.40</div><div class="mid">X - DRAW</div><div class="rv">28%</div></div></div><div class="r"><div class="rtop"><div class="lv">3.20</div><div class="mid">2 - AWAY</div><div class="rv">27%</div></div></div></div>
-<div id="content-pred" class="hide"><div class="sec">Predictions</div><div class="r">Over 2.5 Goals • BTTS Yes • Home or Draw</div></div>
-<div id="content-create" class="hide"><div class="sec">Create Bet</div><div class="r">Bet Builder coming soon</div></div>
-
-<script>
-function showS(n){document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hide'));document.getElementById('tab-'+n).classList.remove('hide');document.querySelectorAll('.sub').forEach(e=>e.classList.remove('active'));document.getElementById('s-'+n).classList.add('active');}
-function showTop(n){document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));document.getElementById('t-'+n).classList.add('active');['stats','odds','pred','create'].forEach(x=>{let el=document.getElementById('content-'+x);if(el)el.classList.add('hide')});document.getElementById('content-'+n).classList.remove('hide');if(n=='stats')showS(document.querySelector('.sub.active')?document.querySelector('.sub.active').id.replace('s-',''):'goals');}
-function toggleM(id){let m=document.getElementById(id);let o=m.classList.contains('open');document.querySelectorAll('.pmenu').forEach(x=>x.classList.remove('open'));if(!o)m.classList.add('open');}
-function setStat(v){document.getElementById('selStat').innerText='📊 '+v;document.getElementById('m1').classList.remove('open');}
-function filterPlayers(){let q=document.getElementById('pSearch').value.toLowerCase();document.querySelectorAll('#plist .prow').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(q)?'flex':'none'})}
-showTop('stats');showS('players');
-document.addEventListener('click',function(e){if(!e.target.closest('.pdrop')){document.querySelectorAll('.pmenu').forEach(x=>x.classList.remove('open'))}});
-</script></body></html>
+<div class="prow"><div><div class="pname">Dodi Lukebakio</div><div class="pteam">Sevilla • Forward • #11</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">14</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Mason Greenwood</div><div class="pteam">Marseille • Forward • #10</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">12</div><div class="sbar"><div class="sfill" style="width:85%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Ousmane Dembélé</div><div class="pteam">PSG • Forward • #10</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">11</div><div class="sbar"><div class="sfill" style="width:78%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Vinicius Jr</div><div class="pteam">Real Madrid • Forward • #7</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">10</div><div class="sbar"><div class="sfill" style="width:71%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Jude Bellingham</div><div class="pteam">Real Madrid • Midfield • #5</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">9</div><div class="sbar"><div class="sfill" style="width:64%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Amine Gouiri</div><div class="pteam">Marseille • Forward • #9</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">8</div><div class="sbar"><div class="sfill" style="width:57%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Marquinhos</div><div class="pteam">PSG • Defender • #5</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">5</div><div class="sbar"><div class="sfill" style="width:35%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Isaac Romero</div><div class="pteam">Sevilla • Forward • #7</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">7</div><div class="sbar"><div class="sfill" style="width:50%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Kylian Mbappé</div><div class="pteam">Real Madrid • Forward • #9</div></div><div style="display:flex;gap:8px;align-items:center"><div style="color:#fff;font-weight:800">15</div><div class="sbar"><div class="sfill" style="width:100%"></div></div></div></div>
+<div class="prow"><div><div class="pname">Federico Valverde</div><div class="pteam">Real Madrid • Midfield • #8</div></div><div style="
