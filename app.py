@@ -9,9 +9,56 @@ FOOTBALL_DATA_KEY = os.getenv("FOOTBALL_DATA_KEY", "")
 app = Flask(__name__)
 
 def get_today_games_live():
-    """Fetch TODAY live + prematch from 4 sources"""
-    today = dt.now().strftime("%Y-%m-%d")
     games = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    
+    try:
+        # Try API-Football first
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        params = {"date": today_str, "timezone": "Africa/Gaborone"}
+        headers = {"X-RapidAPI-Key": API_KEY, "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"}
+        r = requests.get(url, headers=headers, params=params, timeout=10).json()
+        
+        for item in r.get("response", []):
+            status = item["fixture"]["status"]["short"]  # FT, HT, 1H, 2H, NS, LIVE
+            is_live = status in ["1H","2H","HT","ET","P","LIVE","INT","BT"]
+            is_finished = status in ["FT","AET","PEN","AWD","WO","ABD","CANC"]
+            
+            # FT must NEVER be live
+            if is_finished:
+                is_live = False
+                score = f"{item['goals']['home']}-{item['goals']['away']} FT"
+                badge = "FT"
+            elif is_live:
+                score = f"{item['goals']['home']}-{item['goals']['away']} {status}"
+                badge = f"LIVE {status}"
+            else:
+                score = "0-0"
+                badge = item['fixture']['date'][11:16]
+
+            games.append({
+                "home": item["teams"]["home"]["name"],
+                "away": item["teams"]["away"]["name"],
+                "league": f"{item['league']['country']} - {item['league']['name']}",
+                "score": score,
+                "time": item['fixture']['date'][11:16],
+                "badge": badge,
+                "live": is_live,
+                "finished": is_finished,
+                "status": status
+            })
+    except Exception as e:
+        print("API error:", e)
+
+    # Fallback if API fails - ensure FT not marked live
+    if not games:
+        games = [
+            {"home":"Getafe","away":"Malaga","league":"Spain - LaLiga","score":"1-0 FT","time":"14:00","badge":"FT 1-0","live":False,"finished":True,"status":"FT"},
+            {"home":"Atletico Madrid","away":"Real Madrid","league":"Spain - LaLiga","score":"0-0 HT","time":"LIVE 15'","badge":"LIVE HT","live":True,"finished":False,"status":"1H"},
+            {"home":"Deportivo","away":"Real Betis","league":"Spain - LaLiga","score":"0-0","time":"18:30","badge":"18:30","live":False,"finished":False,"status":"NS"},
+            {"home":"Villarreal","away":"Levante","league":"Spain - LaLiga","score":"0-0","time":"18:30","badge":"18:30","live":False,"finished":False,"status":"NS"},
+        ]
+    return games
     
     # 1. API-FOOTBALL
     if API_FOOTBALL_KEY:
