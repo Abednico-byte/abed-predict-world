@@ -13,15 +13,18 @@ LEAGUES = {
 
 def get_games(ds):
     games=[]
-    for code,(country,lg) in LEAGUES.items():
-        try:
-            r=requests.get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard", params={"dates":ds}, timeout=3)
-            for ev in r.json().get("events",[]):
-                comp=ev.get("competitions",[{}])[0]
-                c1,c2=comp.get("competitors",[{},{}])
-                if c1.get("homeAway")!="home": c1,c2=c2,c1
-                games.append({"id":ev.get("id"),"code":code,"country":country,"league":lg,"home":c1.get("team",{}).get("displayName","Home"),"away":c2.get("team",{}).get("displayName","Away"),"hid":c1.get("team",{}).get("id"),"aid":c2.get("team",{}).get("id")})
-        except: pass
+    for offset in [0,1,2,3]:
+        check_date = (datetime.now()+timedelta(days=offset)).strftime("%Y%m%d")
+        for code,(country,lg) in LEAGUES.items():
+            try:
+                r=requests.get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard", params={"dates":check_date}, timeout=3)
+                for ev in r.json().get("events",[]):
+                    comp=ev.get("competitions",[{}])[0]
+                    c1,c2=comp.get("competitors",[{},{}])
+                    if c1.get("homeAway")!="home": c1,c2=c2,c1
+                    games.append({"id":ev.get("id"),"code":code,"country":country,"league":lg,"home":c1.get("team",{}).get("displayName","Home"),"away":c2.get("team",{}).get("displayName","Away"),"hid":c1.get("team",{}).get("id"),"aid":c2.get("team",{}).get("id")})
+            except: pass
+        if games: break
     return games
 
 @app.route("/")
@@ -35,7 +38,8 @@ def home():
 body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .country{{background:#151a25;margin:10px;border-radius:12px}}
 .chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer}}
-.ccontent{{display:block}}.closed.ccontent{{display:none}}
+.ccontent{{display:block}}
+.country.closed.ccontent{{display:none}}
 .fixture{{background:#1e293b;margin:6px 10px;padding:12px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between}}
 .stats{{display:none;background:#0b0e14;margin:0 10px 10px 10px;padding:10px;border:1px solid #00ff88;border-radius:8px}}
 .stats.open{{display:block}}
@@ -84,7 +88,7 @@ function loadTab(e, tab, type){
   let c = box.querySelector('.scontent');
   c.innerHTML='Loading...';
   fetch('/api/stats?type='+type+'&home='+encodeURIComponent(box.dataset.home)+'&away='+encodeURIComponent(box.dataset.away))
-   .then(r=>r.json()).then(j=>{c.innerHTML=j.html;});
+  .then(r=>r.json()).then(j=>{c.innerHTML=j.html;});
 }
 </script></body></html>"""
     return html
