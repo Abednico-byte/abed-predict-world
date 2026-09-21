@@ -4,27 +4,59 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-# REDUCED to 15 top leagues to avoid Render crash - add more after it works
 LEAGUES = {
+    # England - with Amateur
     "eng.1": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "Premier League"),
+    "eng.2": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "Championship"),
+    "eng.3": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "League One"),
+    "eng.4": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "League Two"),
+    "eng.5": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "National League (Amateur)"),
+    # Spain - with Amateur
     "esp.1": ("🇪🇸 Spain", "La Liga"),
+    "esp.2": ("🇪🇸 Spain", "La Liga 2"),
+    "esp.3": ("🇪🇸 Spain", "Primera RFEF (Amateur)"),
+    # Germany - with Amateur
     "ger.1": ("🇩🇪 Germany", "Bundesliga"),
+    "ger.2": ("🇩🇪 Germany", "2. Bundesliga"),
+    "ger.3": ("🇩🇪 Germany", "3. Liga (Amateur)"),
+    # Italy - with Amateur
     "ita.1": ("🇮🇹 Italy", "Serie A"),
+    "ita.2": ("🇮🇹 Italy", "Serie B"),
+    "ita.3": ("🇮🇹 Italy", "Serie C (Amateur)"),
+    # France - with Amateur
     "fra.1": ("🇫🇷 France", "Ligue 1"),
+    "fra.2": ("🇫🇷 France", "Ligue 2"),
+    "fra.3": ("🇫🇷 France", "National (Amateur)"),
+    # Other Europe
     "ned.1": ("🇳🇱 Netherlands", "Eredivisie"),
+    "ned.2": ("🇳🇱 Netherlands", "Eerste Divisie (Amateur)"),
     "por.1": ("🇵🇹 Portugal", "Primeira Liga"),
+    "por.2": ("🇵🇹 Portugal", "Liga 2 (Amateur)"),
     "bel.1": ("🇧🇪 Belgium", "Jupiler Pro"),
+    "bel.2": ("🇧🇪 Belgium", "Challenger Pro (Amateur)"),
+    # Your requested: Norway, Turkey, Croatia, Sweden, Denmark
+    "nor.1": ("🇳🇴 Norway", "Eliteserien"),
+    "nor.2": ("🇳🇴 Norway", "OBOS-ligaen (Amateur)"),
     "tur.1": ("🇹🇷 Turkey", "Super Lig"),
+    "tur.2": ("🇹🇷 Turkey", "1. Lig (Amateur)"),
+    "cro.1": ("🇭🇷 Croatia", "HNL"),
+    "cro.2": ("🇭🇷 Croatia", "Prva NL (Amateur)"),
+    "swe.1": ("🇸🇪 Sweden", "Allsvenskan"),
+    "swe.2": ("🇸🇪 Sweden", "Superettan (Amateur)"),
+    "den.1": ("🇩🇰 Denmark", "Superliga"),
+    "den.2": ("🇩🇰 Denmark", "1st Division (Amateur)"),
+    "sco.1": ("🏴󐁧󐁢󐁳󐁣󐁴󐁿 Scotland", "Premiership"),
+    "sco.2": ("🏴󐁧󐁢󐁳󐁣󐁴󐁿 Scotland", "Championship (Amateur)"),
+    # UEFA + America still with data
     "usa.1": ("🇺🇸 USA", "MLS"),
     "mex.1": ("🇲🇽 Mexico", "Liga MX"),
     "bra.1": ("🇧🇷 Brazil", "Serie A"),
     "uefa.champions": ("🇪🇺 UEFA", "Champions League"),
-    "uefa.europa": ("🇪🇺 UEFA", "Europa League"),
-    "uefa.europa_conf": ("🇪🇺 UEFA", "Conference"),
 }
 
 FD_MAP = {
     "eng.1": "https://www.football-data.co.uk/mmz4281/2526/E0.csv",
+    "eng.2": "https://www.football-data.co.uk/mmz4281/2526/E1.csv",
     "esp.1": "https://www.football-data.co.uk/mmz4281/2526/SP1.csv",
     "ger.1": "https://www.football-data.co.uk/mmz4281/2526/D1.csv",
     "ita.1": "https://www.football-data.co.uk/mmz4281/2526/I1.csv",
@@ -67,28 +99,26 @@ def get_real_avg(team, code, stat):
                         else: v.append(int(x.get('AY') or 0)+int(x.get('AR') or 0))
                     return f"<b>REAL DATA</b><br>{team}: {round(sum(v)/len(v),1)} cards/g L5"
             except: pass
-    # WITH DATA model for UEFA/American
     base={"corners":5.0,"cards":2.2,"fouls":12.5,"shots":11.5}.get(stat,5.0)
     return f"<b>WITH DATA MODEL</b><br>{team}: {round(base+random.uniform(-0.7,0.7),1)} {stat}/g L5<br><small>{code}</small>"
 
 def get_games():
-    # Use cache 10 min to avoid crash
     if CACHE_GAMES["time"] and (datetime.now() - CACHE_GAMES["time"]).seconds < 600:
         return CACHE_GAMES["data"]
     games=[]
-    for offset in range(-1, 4): # Only 5 days now, not 8
+    for offset in range(-1, 4):
         check_date = (datetime.now()+timedelta(days=offset)).strftime("%Y%m%d")
         for code,(country,lg) in LEAGUES.items():
             try:
                 r=requests.get(f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard", params={"dates":check_date}, timeout=3)
-                for ev in r.json().get("events",[])[:3]: # max 3 per league per day
+                for ev in r.json().get("events",[])[:2]:
                     comp=ev.get("competitions",[{}])[0]
                     if len(comp.get("competitors",[])) < 2: continue
                     c1,c2=comp.get("competitors",[{},{}])
                     if c1.get("homeAway")!="home": c1,c2=c2,c1
                     games.append({"id":ev.get("id"),"code":code,"country":country,"league":lg,"home":c1.get("team",{}).get("displayName","Home"),"away":c2.get("team",{}).get("displayName","Away"),"date":check_date})
             except: pass
-        if len(games) >= 8: break
+        if len(games) >= 15: break
     CACHE_GAMES["time"]=datetime.now()
     CACHE_GAMES["data"]=games
     return games
@@ -99,14 +129,31 @@ def home():
     grouped={}
     for g in games: grouped.setdefault(g["country"],{}).setdefault(g["league"],[]).append(g)
     html=f"""<html><head><meta name='viewport' content='width=device-width,initial-scale=1'>
-<style>body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}.country{{background:#151a25;margin:10px;border-radius:12px}}.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer}}.fixture{{background:#1e293b;margin:6px 10px;padding:12px;border-radius:8px;cursor:pointer}}.stats{{display:none;background:#0b0e14;margin:0 10px 10px 10px;padding:10px;border:1px solid #00ff88;border-radius:8px}}.stats.open{{display:block}}.tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}.tab.active{{background:#00ff88;color:#000;font-weight:bold}}</style></head><body>
-<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games WITH DATA - FIXED</div>
+<style>
+body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
+.country{{background:#151a25;margin:10px;border-radius:12px;overflow:hidden}}
+.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer;background:#1a2332}}
+.chead:hover{{background:#223044}}
+.ccontent{{display:none}}
+.country.open.ccontent{{display:block}}
+.league-title{{padding:8px 14px;color:#8ab4ff;font-size:13px;background:#0f1a2a;margin-top:4px}}
+.fixture{{background:#1e293b;margin:6px 10px;padding:12px;border-radius:8px;cursor:pointer}}
+.stats{{display:none;background:#0b0e14;margin:0 10px 10px 10px;padding:10px;border:1px solid #00ff88;border-radius:8px}}
+.stats.open{{display:block}}
+.tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}
+.tab.active{{background:#00ff88;color:#000;font-weight:bold}}
+.amateur{{font-size:10px;background:#ff6b35;color:#000;padding:2px 6px;border-radius:8px;margin-left:6px}}
+</style></head><body>
+<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Tap country to open ▼</div>
 """
     for country, leagues in sorted(grouped.items()):
         total=sum(len(v) for v in leagues.values())
-        html+=f"<div class='country'><div class='chead' onclick='this.parentElement.classList.toggle(\"closed\")'><span>{country} ({total})</span><span>▼</span></div><div>"
+        # CLOSED BY DEFAULT - only open when clicked
+        html+=f"<div class='country'><div class='chead' onclick='this.parentElement.classList.toggle(\"open\")'><span>{country} ({total})</span><span>▼</span></div><div class='ccontent'>"
         for lname, fixs in leagues.items():
-            html+=f"<div style='padding:8px 14px;color:#8ab4ff'>{lname}</div>"
+            is_amateur = "Amateur" in lname
+            badge = "<span class='amateur'>AMATEUR</span>" if is_amateur else ""
+            html+=f"<div class='league-title'>{lname} {badge} ({len(fixs)})</div>"
             for f in fixs:
                 html+=f"""<div class='fixture' onclick='this.nextElementSibling.classList.toggle("open")'><b>{f['home']}</b> vs <b>{f['away']}</b><br><small>{f['date']} - WITH DATA</small><br><span style='color:#00ff88'>Statistics ▼</span></div>
 <div class='stats' data-home='{f['home']}' data-away='{f['away']}' data-code='{f['code']}'><div>
@@ -114,7 +161,7 @@ def home():
 <span class='tab' onclick='loadTab(event,this,"cards")'>Cards L5</span>
 <span class='tab' onclick='loadTab(event,this,"fouls")'>Fouls L5</span>
 <span class='tab' onclick='loadTab(event,this,"shots")'>Shots</span>
-</div><div class='scontent' style='margin-top:10px;font-size:12px;color:#aaa'>Tap tab for WITH DATA</div></div>"""
+</div><div class='scontent' style='margin-top:10px;font-size:12px;color:#aaa'>WITH DATA</div></div>"""
         html+="</div></div>"
     html+="""
 <script>
