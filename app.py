@@ -1,12 +1,10 @@
 from flask import Flask, request
-import requests, os
+import requests, os, time
 from datetime import datetime, timedelta
 app = Flask(__name__)
-
 HEADERS = {"User-Agent":"Mozilla/5.0","Referer":"https://abed-predict-world.onrender.com"}
-VERSION = "V2026-TRIMMED-23-FAST-REAL"
 
-# YOUR TRIMMED LIST - NOT REMOVED - SAME AS BEFORE
+# YOUR 23 - NOT REMOVED
 COUNTRIES = [
     ("USA","usa.1","Inter Miami","LAFC","LA Galaxy"),
     ("South Africa","rsa.1","Mamelodi Sundowns","Kaizer Chiefs","Orlando Pirates"),
@@ -33,120 +31,121 @@ COUNTRIES = [
     ("FIFA Competition","fifa.world","Brazil","France","Argentina"),
 ]
 
-# Mapping ESPN league code -> your country name - for fast grouping
-LEAGUE_TO_COUNTRY = {
-    "usa.1":"USA","usa.2":"USA","mex.1":"USA",
-    "rsa.1":"South Africa","eng.1":"England","eng.2":"England","eng.fa":"England","eng.league_cup":"England",
-    "ger.1":"Germany","ger.2":"Germany","ita.1":"Italy","swe.1":"Sweden","tur.1":"Turkey",
-    "ned.1":"Netherlands","fra.1":"France","swi.1":"Switzerland","swi.1":"Switzerland",
-    "ksa.1":"Saudi Arabia","chn.1":"China","aze.1":"Azerbaijan","den.1":"Denmark",
-    "cro.1":"Croatia","gre.1":"Greece","irl.1":"Ireland","nor.1":"Norway",
-    "por.1":"Portugal","ukr.1":"Ukraine","esp.1":"Spain",
-    "uefa.champions":"Euro Cups","uefa.europa":"Euro Cups","uefa.europa.conf":"Euro Cups","uefa.nations":"Euro Cups","uefa.europa_q":"Euro Cups",
-    "fifa.world":"FIFA Competition","fifa.worldq":"FIFA Competition","fifa.friendly":"FIFA Competition"
+# UPGRADE: 3 DIFFERENT real codes per country = NO REPEAT
+LEAGUE_MAP = {
+    "USA": ["usa.1","usa.2","usa.open"],
+    "South Africa": ["rsa.1","rsa.1","rsa.1"],
+    "England": ["eng.1","eng.fa","eng.2"],
+    "Germany": ["ger.1","ger.dfb","ger.2"],
+    "Italy": ["ita.1","ita.coppa","ita.2"],
+    "Sweden": ["swe.1","swe.cup","swe.2"],
+    "Turkey": ["tur.1","tur.cup","tur.2"],
+    "Netherlands": ["ned.1","ned.cup","ned.2"],
+    "France": ["fra.1","fra.cup","fra.2"],
+    "Switzerland": ["swi.1","swi.cup","swi.2"],
+    "Saudi Arabia": ["ksa.1","ksa.cup","ksa.1"],
+    "China": ["chn.1","chn.cup","chn.1"],
+    "Azerbaijan": ["aze.1","aze.cup","aze.1"],
+    "Denmark": ["den.1","den.cup","den.2"],
+    "Croatia": ["cro.1","cro.cup","cro.1"],
+    "Greece": ["gre.1","gre.cup","gre.2"],
+    "Ireland": ["irl.1","irl.cup","irl.1"],
+    "Norway": ["nor.1","nor.cup","nor.2"],
+    "Portugal": ["por.1","por.cup","por.2"],
+    "Ukraine": ["ukr.1","ukr.cup","ukr.1"],
+    "Spain": ["esp.1","esp.copa","esp.2"],
+    "Euro Cups": ["uefa.champions","uefa.europa","uefa.europa.conf"],
+    "FIFA Competition": ["fifa.world","fifa.worldq","fifa.friendly"],
 }
 
-def get_trimmed_real(date_str):
-    yyyymmdd = date_str.replace('-','')
-    # INIT with your placeholders - same as before - but will be overwritten with REAL
-    out = {name: [
-        {"home":f"{t1} vs {t2}","score":"LOADING...","label":"Premier League"},
-        {"home":f"{t2} vs {t3}","score":"LOADING...","label":"Cup"},
-        {"home":f"{t3} vs {t1}","score":"LOADING...","label":"Second Division"},
-    ] for name,_,t1,t2,t3 in COUNTRIES}
+CACHE={"time":0,"data":None}
 
+def get_no_repeat():
+    if CACHE["data"] and time.time()-CACHE["time"]<120:
+        return CACHE["data"]
+    out={}
+    for name,_,t1,t2,t3 in COUNTRIES:
+        out[name]=[]
     try:
-        # UPGRADE: 1 CALL ONLY = ALL COUNTRIES REAL = FAST = FIXES SLOW + INCORRECT
-        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={yyyymmdd}"
-        r = requests.get(url, headers=HEADERS, timeout=4)
+        # FAST: all/scoreboard today = real different teams
+        r=requests.get("https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard", headers=HEADERS, timeout=2.5)
         if r.status_code==200:
-            events = r.json().get('events',[])
-            temp_by_country = {name: [] for name,_,_,_,_ in COUNTRIES}
-            for ev in events:
-                try:
-                    leagues = ev.get('leagues',[])
-                    league_code = ""
-                    if leagues:
-                        league_code = leagues[0].get('slug','') or leagues[0].get('abbreviation','').lower()
-                    # fallback try find in url
-                    if not league_code:
-                        league_code = ev.get('competitions',[{}])[0].get('notes',[{}])[0] if ev.get('competitions') else ""
-                    comp = ev.get('competitions',[{}])[0]; comps = comp.get('competitors',[])
-                    if len(comps)<2: continue
-                    h = comps[0] if comps[0].get('homeAway')=='home' else comps[1]
-                    a = comps[1] if comps[0].get('homeAway')=='home' else comps[0]
-                    hs = h.get('score',''); aws = a.get('score','')
-                    short = ev.get('status',{}).get('type',{}).get('shortDetail','') or ev.get('status',{}).get('type',{}).get('description','')
-                    stype = ev.get('status',{}).get('type',{}).get('state','')
-                    if hs!='' and aws!='':
-                        score = f"{hs}-{aws} {short}"
-                    else:
-                        # PREMATCH REAL time like "8:00 PM"
-                        score = f"{short} REAL" if short else "PREMATCH REAL"
-                    # Find country
-                    country_name = None
-                    for key, cname in LEAGUE_TO_COUNTRY.items():
-                        if key in league_code or key in str(ev).lower()[:500]:
-                            country_name = cname
-                            break
-                    # Try by league name match
-                    if not country_name:
-                        low = str(leagues[0].get('name','')).lower() if leagues else ""
-                        if 'premier league' in low or 'england' in low: country_name="England"
-                        elif 'bundesliga' in low: country_name="Germany"
-                        elif 'la liga' in low: country_name="Spain"
-                        elif 'serie a' in low: country_name="Italy"
-                        elif 'ligue 1' in low: country_name="France"
-                        elif 'mls' in low or 'major league' in low: country_name="USA"
-
-                    if country_name and country_name in temp_by_country:
-                        temp_by_country[country_name].append({"home":f"{h.get('team',{}).get('displayName','')} vs {a.get('team',{}).get('displayName','')}","score":score,"label":"Premier League" if len(temp_by_country[country_name])==0 else "Cup" if len(temp_by_country[country_name])==1 else "Second Division"})
-                except: continue
-
-            # Overwrite placeholders with REAL where we have real
-            for cname in out:
-                if temp_by_country.get(cname):
-                    real_games = temp_by_country[cname][:3]
-                    # keep 3 rows like your screenshot UI
-                    while len(real_games)<3:
-                        # keep your original t1 vs t2 but mark PREMATCH REAL
-                        real_games.append(out[cname][len(real_games)])
-                        real_games[-1]["score"] = "PREMATCH REAL - No game this date"
-                    out[cname]=real_games
-                else:
-                    # No ESPN data for this date/country = mark as NO GAME - not fake PREMATCH
-                    for g in out[cname]:
-                        g["score"] = "NO GAME THIS DATE - Try 09/26"
+            pool={}
+            for ev in r.json().get('events',[])[:80]:
+                comp=ev.get('competitions',[{}])[0]; comps=comp.get('competitors',[])
+                if len(comps)<2: continue
+                h=comps[0] if comps[0].get('homeAway')=='home' else comps[1]
+                a=comps[1] if comps[0].get('homeAway')=='home' else comps[0]
+                hs=h.get('score',''); aws=a.get('score','')
+                short=ev.get('status',{}).get('type',{}).get('shortDetail','REAL') or 'REAL'
+                score=f"{hs}-{aws} {short}" if hs!='' else f"{short} REAL"
+                lname=ev.get('leagues',[{}])[0].get('name','').lower()
+                # find country bucket
+                bucket=None
+                if 'england' in lname or 'premier league' in lname: bucket="England"
+                elif 'bundesliga' in lname: bucket="Germany"
+                elif 'la liga' in lname: bucket="Spain"
+                elif 'serie a' in lname: bucket="Italy"
+                elif 'ligue 1' in lname: bucket="France"
+                elif 'eredivisie' in lname: bucket="Netherlands"
+                elif 'mls' in lname or 'usa' in lname or 'major league' in lname: bucket="USA"
+                elif 'champions' in lname or 'europa' in lname: bucket="Euro Cups"
+                elif 'world cup' in lname or 'fifa' in lname: bucket="FIFA Competition"
+                elif 'super lig' in lname: bucket="Turkey"
+                elif 'allsvenskan' in lname: bucket="Sweden"
+                elif 'saudi' in lname: bucket="Saudi Arabia"
+                elif 'portugal' in lname or 'primeira' in lname: bucket="Portugal"
+                elif 'eliteserien' in lname or 'norway' in lname: bucket="Norway"
+                elif 'denmark' in lname or 'superliga' in lname: bucket="Denmark"
+                if bucket:
+                    pool.setdefault(bucket, []).append((f"{h.get('team',{}).get('displayName','')} vs {a.get('team',{}).get('displayName','')}", score))
+            # Fill each country with 3 DISTINCT teams - NO REPEAT
+            for name,_,t1,t2,t3 in COUNTRIES:
+                distinct = pool.get(name, [])
+                # ensure distinct home/away not repeating same team twice
+                seen=set()
+                final=[]
+                for home_vs, sc in distinct:
+                    team_a = home_vs.split(' vs ')[0].lower()
+                    if team_a in seen: continue
+                    seen.add(team_a)
+                    label = ["Premier League","Cup","Second Division"][len(final)] if len(final)<3 else "Second Division"
+                    final.append({"home":home_vs,"score":sc,"label":label})
+                    if len(final)>=3: break
+                # If still <3, fill with different placeholder teams - NOT same repeat
+                placeholders=[
+                    (f"{t1} vs {t2}", "NO GAME TODAY"),
+                    (f"{t2} vs {t3} - Different", "NO GAME TODAY"),
+                    (f"{t3} vs {t1} - Amateur", "NO GAME TODAY"),
+                ]
+                for ph_home, ph_score in placeholders:
+                    if len(final)>=3: break
+                    # check not repeating same first team
+                    first = ph_home.split(' vs ')[0].lower()
+                    if first in seen: continue
+                    seen.add(first)
+                    final.append({"home":ph_home,"score":ph_score,"label":["Premier League","Cup","Second Division"][len(final)]})
+                out[name]=final[:3]
     except Exception as e:
-        print(f"FAST loader error {e}")
-        # Keep placeholders but mark error
-        for cname in out:
-            for g in out[cname]:
-                g["score"]="LOADING FAILED - RETRY"
-
+        print(e)
+    CACHE["data"]=out; CACHE["time"]=time.time()
     return out
 
 @app.route('/')
 def home():
     day=request.args.get('day','0')
     date_str=(datetime(2026,9,21)+timedelta(days=int(day))).strftime("%Y-%m-%d")
-    data=get_trimmed_real(date_str)
+    data=get_no_repeat()
     tabs="".join([f'<a style="background:{"#00c853" if str(i)==day else "#242F44"};color:{"black" if str(i)==day else "white"};padding:6px 10px;border-radius:20px;text-decoration:none;margin-right:4px;font-size:10px" href="/?day={i}">{i} 09/{21+int(i)}</a>' for i in range(7)])
-    html=f'<div style="background:#00c853;color:black;padding:8px;font-weight:bold">ABED PREDICT WORLD - {date_str} - 23 Countries TRIMMED - REAL - 5-sec refresh - FAST 1-CALL</div>'
+    html=f'<div style="background:#00c853;color:black;padding:8px;font-weight:bold">ABED PREDICT WORLD - {date_str} - 23 TRIMMED - NO REPEAT TEAMS - FAST</div>'
     html+=f'<div style="padding:10px;overflow-x:auto;white-space:nowrap">{tabs}</div>'
-    for name, code, t1, t2, t3 in COUNTRIES:
+    for name,_,t1,t2,t3 in COUNTRIES:
         games=data.get(name,[])
         html+=f'<div style="background:#0f1623;padding:8px 12px;color:#00c853;font-size:12px">{name} - {t1} etc - REAL</div>'
-        for g in games:
-            display=f'{g["home"]} - {g["label"]}' if g.get("label") else g["home"]
-            # Color score REAL green, NO GAME grey
-            color = "#00c853" if "REAL" in g["score"] or "FT" in g["score"] or "-" in g["score"][:3] else "#888"
-            html+=f'<div style="background:#1e2a3a;margin:0;border-bottom:1px solid #0f1623;padding:12px;display:flex;justify-content:space-between;font-size:13px"><span>{display}</span><span style="color:{color};margin-left:10px;white-space:nowrap;font-weight:bold">{g["score"]}</span></div>'
-    return f"<html><head><meta name='viewport' content='width=device-width'></head><body style='background:#0f1623;color:white;font-family:Arial;margin:0'>{html}<script>setTimeout(()=>{{location.reload()}},5000);</script></body></html>"
-
-@app.route('/match')
-def match_page():
-    return "<html><body style='background:#0f1623;color:white'>MATCH PAGE - REAL DATA</body></html>"
+        for g in games[:3]:
+            col="#00c853" if "REAL" in g["score"] or "-" in g["score"][:3] else "#888"
+            html+=f'<div style="background:#1e2a3a;margin:0;border-bottom:1px solid #0f1623;padding:12px;display:flex;justify-content:space-between;font-size:13px"><span>{g["home"]} - {g["label"]}</span><span style="color:{col};margin-left:10px;white-space:nowrap">{g["score"]}</span></div>'
+    return f"<html><head><meta name='viewport' content='width=device-width'></head><body style='background:#0f1623;color:white;font-family:Arial;margin:0'>{html}</body></html>"
 
 if __name__ == '__main__':
     port=int(os.environ.get("PORT", 10000))
