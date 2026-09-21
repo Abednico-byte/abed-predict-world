@@ -52,13 +52,13 @@ def get_real_avg(team, code, stat):
             try:
                 if stat=="corners":
                     v=[int(x.get('HC') or 0) if team.lower()[:4] in x.get('HomeTeam','').lower() else int(x.get('AC') or 0) for x in gms]
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} corners/g"
+                    return f"<b>RECENT L5 REAL</b><br>{team}: {round(sum(v)/len(v),1)} corners/g"
                 if stat=="cards":
                     v=[]
                     for x in gms:
                         if team.lower()[:4] in x.get('HomeTeam','').lower(): v.append(int(x.get('HY') or 0)+int(x.get('HR') or 0))
                         else: v.append(int(x.get('AY') or 0)+int(x.get('AR') or 0))
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} cards/g"
+                    return f"<b>RECENT L5 REAL</b><br>{team}: {round(sum(v)/len(v),1)} cards/g"
             except: pass
     base={"corners":5.0,"cards":2.2,"fouls":12.5,"shots":11.5}.get(stat,5.0)
     return f"<b>RECENT MODEL</b><br>{team}: {round(base+random.uniform(-0.5,0.5),1)} {stat}/g L5"
@@ -101,13 +101,13 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}
 .tab.active{{background:#00ff88;color:#000;font-weight:bold}}
 </style></head><body>
-<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Tap to open</div>
+<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | FIXED</div>
 """
     for country, leagues in sorted(grouped.items()):
         total=sum(len(v) for v in leagues.values())
         html+=f"<div class='country'><div class='chead' onclick='this.parentElement.classList.toggle(\"open\")'><span>{country} ({total})</span><span>▼</span></div><div class='ccontent'>"
         for lname, fixs in leagues.items():
-            html+=f"<div style='padding:8px 14px;color:#8ab4ff;font-weight:bold'>{lname} ({len(fixs)})</div>"
+            html+=f"<div style='padding:8px 14px;color:#8ab4ff;font-weight:bold;background:#0f1a2a'>{lname}</div>"
             for f in fixs:
                 html+=f"""<div class='fixture' onclick='this.nextElementSibling.classList.toggle("open")'><b>{f['home']}</b> vs <b>{f['away']}</b><br><small>{f['date']}</small><br><span style='color:#00ff88'>Statistics ▼</span></div>
 <div class='stats' data-home='{f['home']}' data-away='{f['away']}' data-code='{f['code']}'><div>
