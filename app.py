@@ -1,9 +1,7 @@
 import os, requests, random, csv, io
 from flask import Flask, request, jsonify
 from datetime import datetime, timedelta
-
 app = Flask(__name__)
-
 LEAGUES = {
     "eng.1": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "Premier League"),
     "esp.1": ("🇪🇸 Spain", "La Liga"),
@@ -21,7 +19,6 @@ LEAGUES = {
     "usa.1": ("🇺🇸 USA", "MLS"),
     "uefa.champions": ("🇪🇺 UEFA", "Champions League"),
 }
-
 FD_MAP = {
     "eng.1": "https://www.football-data.co.uk/mmz4281/2526/E0.csv",
     "esp.1": "https://www.football-data.co.uk/mmz4281/2526/SP1.csv",
@@ -29,10 +26,8 @@ FD_MAP = {
     "ita.1": "https://www.football-data.co.uk/mmz4281/2526/I1.csv",
     "fra.1": "https://www.football-data.co.uk/mmz4281/2526/F1.csv",
 }
-
 CACHE_GAMES = {"time": None, "data": []}
 CACHE_FD = {}
-
 def get_fd_data(code):
     if code not in FD_MAP: return []
     url = FD_MAP[code]
@@ -45,7 +40,6 @@ def get_fd_data(code):
         CACHE_FD[url] = {'time': datetime.now(), 'rows': rows}
         return rows
     except: return []
-
 def get_real_avg(team, code, stat):
     rows = get_fd_data(code)
     if rows:
@@ -67,8 +61,7 @@ def get_real_avg(team, code, stat):
                     return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} cards/g"
             except: pass
     base={"corners":5.0,"cards":2.2,"fouls":12.5,"shots":11.5}.get(stat,5.0)
-    return f"<b>RECENT MODEL</b><br>{team}: {round(base+random.uniform(-0.5,0.5),1)} {stat}/g L5<br><small>{code}</small>"
-
+    return f"<b>RECENT MODEL</b><br>{team}: {round(base+random.uniform(-0.5,0.5),1)} {stat}/g L5"
 def get_games():
     if CACHE_GAMES["time"] and (datetime.now() - CACHE_GAMES["time"]).seconds < 600:
         return CACHE_GAMES["data"]
@@ -83,7 +76,7 @@ def get_games():
                     if len(comp.get("competitors",[])) < 2: continue
                     c1,c2=comp.get("competitors",[{},{}])
                     if c1.get("homeAway")!="home": c1,c2=c2,c1
-                    games.append({"id":ev.get("id"),"code":code,"country":country,"league":lg,"home":c1.get("team",{}).get("displayName","Home"),"away":c2.get("team",{}).get("displayName","Away"),"date":check_date})
+                    games.append({"code":code,"country":country,"league":lg,"home":c1.get("team",{}).get("displayName","Home"),"away":c2.get("team",{}).get("displayName","Away"),"date":check_date})
             except: pass
         if len(games) >= 10: break
     CACHE_GAMES["time"]=datetime.now()
@@ -99,9 +92,8 @@ def home():
 <style>
 body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .country{{background:#151a25;margin:10px;border-radius:12px;overflow:hidden}}
-.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer;background:#1a2332;user-select:none}}
-.chead:active{{background:#2a3a52}}
-.ccontent{{display:none;padding-bottom:6px}}
+.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer;background:#1a2332}}
+.ccontent{{display:none}}
 .country.open.ccontent{{display:block}}
 .fixture{{background:#1e293b;margin:6px 10px;padding:12px;border-radius:8px;cursor:pointer}}
 .stats{{display:none;background:#0b0e14;margin:0 10px 10px 10px;padding:10px;border:1px solid #00ff88;border-radius:8px}}
@@ -109,11 +101,11 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}
 .tab.active{{background:#00ff88;color:#000;font-weight:bold}}
 </style></head><body>
-<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Tap country ▼ to open</div>
+<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | FIXED - Tap to open</div>
 """
     for country, leagues in sorted(grouped.items()):
         total=sum(len(v) for v in leagues.values())
-        html+=f"<div class='country'><div class='chead' onclick='this.parentElement.classList.toggle(\"open\")'><span>{country} ({total})</span><span>▼</span></div><div class='ccontent'>"
+        html+=f"<div class='country' id='c-{country[:3]}'><div class='chead' onclick='toggleCountry(this)'><span>{country} ({total})</span><span class='arrow'>▼</span></div><div class='ccontent'>"
         for lname, fixs in leagues.items():
             html+=f"<div style='padding:8px 14px;color:#8ab4ff'>{lname} ({len(fixs)})</div>"
             for f in fixs:
@@ -123,17 +115,23 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 <span class='tab' onclick='loadTab(event,this,"cards")'>Cards L5</span>
 <span class='tab' onclick='loadTab(event,this,"fouls")'>Fouls L5</span>
 <span class='tab' onclick='loadTab(event,this,"shots")'>Shots</span>
-</div><div class='scontent' style='margin-top:10px;font-size:12px;color:#aaa'>Recent L5 only</div></div>"""
+</div><div class='scontent' style='margin-top:10px'>Recent L5</div></div>"""
         html+="</div></div>"
     html+="""
 <script>
+function toggleCountry(el){
+  var parent = el.parentElement;
+  parent.classList.toggle('open');
+  var arrow = el.querySelector('.arrow');
+  arrow.textContent = parent.classList.contains('open')? '▲' : '▼';
+}
 function loadTab(e, tab, type){
   e.stopPropagation();
   let box = tab.closest('.stats');
   box.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   tab.classList.add('active');
   let c = box.querySelector('.scontent');
-  c.innerHTML='Loading recent...';
+  c.innerHTML='Loading...';
   fetch('/api/stats?type='+type+'&home='+encodeURIComponent(box.dataset.home)+'&away='+encodeURIComponent(box.dataset.away)+'&code='+encodeURIComponent(box.dataset.code))
 .then(r=>r.json()).then(j=>{c.innerHTML=j.html;});
 }
@@ -145,7 +143,7 @@ def stats():
     t=request.args.get("type"); home=request.args.get("home","Home"); away=request.args.get("away","Away"); code=request.args.get("code","eng.1")
     rh = get_real_avg(home, code, t)
     ra = get_real_avg(away, code, t)
-    return jsonify({"html": f"{rh}<br><br>{ra}<br><br><span style='color:#00ff88'>✓ Recent L5</span>"})
+    return jsonify({"html": f"{rh}<br><br>{ra}<br><br><span style='color:#00ff88'>✓ Recent</span>"})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
