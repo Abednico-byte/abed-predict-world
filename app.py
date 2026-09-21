@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-# YOUR LAST POSTED LEAGUES - NOT CHANGED
 LEAGUES = {
     "eng.1": ("🏴󐁧󐁢󐁥󐁮󐁧󐁿 England", "Premier League"),
     "esp.1": ("🇪🇸 Spain", "La Liga"),
@@ -42,17 +41,16 @@ def get_fd_data(code):
     try:
         r = requests.get(url, timeout=5, headers={'User-Agent':'Mozilla/5.0'})
         reader = csv.DictReader(io.StringIO(r.text))
-        rows = list(reader)[-100:] # RECENT 100 only
+        rows = list(reader)[-100:]
         CACHE_FD[url] = {'time': datetime.now(), 'rows': rows}
         return rows
     except: return []
 
 def get_real_avg(team, code, stat):
-    # ONLY RECENT DATA - Last 5 games
     rows = get_fd_data(code)
     if rows:
         gms=[]
-        for row in reversed(rows): # Most recent first
+        for row in reversed(rows):
             if team.lower()[:4] in row.get('HomeTeam','').lower() or team.lower()[:4] in row.get('AwayTeam','').lower():
                 gms.append(row)
             if len(gms)>=5: break
@@ -60,24 +58,16 @@ def get_real_avg(team, code, stat):
             try:
                 if stat=="corners":
                     v=[int(x.get('HC') or 0) if team.lower()[:4] in x.get('HomeTeam','').lower() else int(x.get('AC') or 0) for x in gms]
-                    total=sum(int(x.get('HC') or 0)+int(x.get('AC') or 0) for x in gms)/len(gms)
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} corners/g<br>Total: {round(total,1)}/game<br><small>{len(v)} recent games - {code}</small>"
+                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} corners/g"
                 if stat=="cards":
                     v=[]
                     for x in gms:
                         if team.lower()[:4] in x.get('HomeTeam','').lower(): v.append(int(x.get('HY') or 0)+int(x.get('HR') or 0))
                         else: v.append(int(x.get('AY') or 0)+int(x.get('AR') or 0))
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} cards/g<br><small>Recent 5</small>"
-                if stat=="fouls":
-                    v=[int(x.get('HF') or 0) if team.lower()[:4] in x.get('HomeTeam','').lower() else int(x.get('AF') or 0) for x in gms]
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} fouls/g"
-                if stat=="shots":
-                    v=[int(x.get('HS') or 0) if team.lower()[:4] in x.get('HomeTeam','').lower() else int(x.get('AS') or 0) for x in gms]
-                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} shots/g"
+                    return f"<b>RECENT L5 - REAL</b><br>{team}: {round(sum(v)/len(v),1)} cards/g"
             except: pass
-    # Fallback with recent model
     base={"corners":5.0,"cards":2.2,"fouls":12.5,"shots":11.5}.get(stat,5.0)
-    return f"<b>RECENT MODEL</b><br>{team}: {round(base+random.uniform(-0.5,0.5),1)} {stat}/g L5<br><small>Recent avg for {code}</small>"
+    return f"<b>RECENT MODEL</b><br>{team}: {round(base+random.uniform(-0.5,0.5),1)} {stat}/g L5<br><small>{code}</small>"
 
 def get_games():
     if CACHE_GAMES["time"] and (datetime.now() - CACHE_GAMES["time"]).seconds < 600:
@@ -109,8 +99,9 @@ def home():
 <style>
 body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .country{{background:#151a25;margin:10px;border-radius:12px;overflow:hidden}}
-.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer;background:#1a2332}}
-.ccontent{{display:none}}
+.chead{{padding:14px;display:flex;justify-content:space-between;cursor:pointer;background:#1a2332;user-select:none}}
+.chead:active{{background:#2a3a52}}
+.ccontent{{display:none;padding-bottom:6px}}
 .country.open.ccontent{{display:block}}
 .fixture{{background:#1e293b;margin:6px 10px;padding:12px;border-radius:8px;cursor:pointer}}
 .stats{{display:none;background:#0b0e14;margin:0 10px 10px 10px;padding:10px;border:1px solid #00ff88;border-radius:8px}}
@@ -118,7 +109,7 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}
 .tab.active{{background:#00ff88;color:#000;font-weight:bold}}
 </style></head><body>
-<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Recent Data Only</div>
+<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Tap country ▼ to open</div>
 """
     for country, leagues in sorted(grouped.items()):
         total=sum(len(v) for v in leagues.values())
@@ -128,10 +119,10 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
             for f in fixs:
                 html+=f"""<div class='fixture' onclick='this.nextElementSibling.classList.toggle("open")'><b>{f['home']}</b> vs <b>{f['away']}</b><br><small>{f['date']}</small><br><span style='color:#00ff88'>Statistics ▼</span></div>
 <div class='stats' data-home='{f['home']}' data-away='{f['away']}' data-code='{f['code']}'><div>
-<span class='tab active' onclick='loadTab(event,this,"corners")'>Avg Corners L5</span>
-<span class='tab' onclick='loadTab(event,this,"cards")'>Avg Cards L5</span>
-<span class='tab' onclick='loadTab(event,this,"fouls")'>Avg Fouls L5</span>
-<span class='tab' onclick='loadTab(event,this,"shots")'>Avg Shots</span>
+<span class='tab active' onclick='loadTab(event,this,"corners")'>Corners L5</span>
+<span class='tab' onclick='loadTab(event,this,"cards")'>Cards L5</span>
+<span class='tab' onclick='loadTab(event,this,"fouls")'>Fouls L5</span>
+<span class='tab' onclick='loadTab(event,this,"shots")'>Shots</span>
 </div><div class='scontent' style='margin-top:10px;font-size:12px;color:#aaa'>Recent L5 only</div></div>"""
         html+="</div></div>"
     html+="""
@@ -154,7 +145,7 @@ def stats():
     t=request.args.get("type"); home=request.args.get("home","Home"); away=request.args.get("away","Away"); code=request.args.get("code","eng.1")
     rh = get_real_avg(home, code, t)
     ra = get_real_avg(away, code, t)
-    return jsonify({"html": f"{rh}<br><br>{ra}<br><br><span style='color:#00ff88'>✓ Recent L5 Data</span>"})
+    return jsonify({"html": f"{rh}<br><br>{ra}<br><br><span style='color:#00ff88'>✓ Recent L5</span>"})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
