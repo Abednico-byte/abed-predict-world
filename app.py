@@ -101,13 +101,13 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
 .tab{{display:inline-block;padding:6px 12px;background:#233044;border-radius:20px;font-size:11px;margin:3px;cursor:pointer}}
 .tab.active{{background:#00ff88;color:#000;font-weight:bold}}
 </style></head><body>
-<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | FIXED - Tap to open</div>
+<div style='padding:12px;background:#0b1220'><b style='color:#00ff88'>PREDICT WORLD</b> - {len(games)} games | Tap to open</div>
 """
     for country, leagues in sorted(grouped.items()):
         total=sum(len(v) for v in leagues.values())
-        html+=f"<div class='country' id='c-{country[:3]}'><div class='chead' onclick='toggleCountry(this)'><span>{country} ({total})</span><span class='arrow'>▼</span></div><div class='ccontent'>"
+        html+=f"<div class='country'><div class='chead' onclick='this.parentElement.classList.toggle(\"open\")'><span>{country} ({total})</span><span>▼</span></div><div class='ccontent'>"
         for lname, fixs in leagues.items():
-            html+=f"<div style='padding:8px 14px;color:#8ab4ff'>{lname} ({len(fixs)})</div>"
+            html+=f"<div style='padding:8px 14px;color:#8ab4ff;font-weight:bold'>{lname} ({len(fixs)})</div>"
             for f in fixs:
                 html+=f"""<div class='fixture' onclick='this.nextElementSibling.classList.toggle("open")'><b>{f['home']}</b> vs <b>{f['away']}</b><br><small>{f['date']}</small><br><span style='color:#00ff88'>Statistics ▼</span></div>
 <div class='stats' data-home='{f['home']}' data-away='{f['away']}' data-code='{f['code']}'><div>
@@ -119,12 +119,6 @@ body{{background:#0f141f;color:#fff;font-family:Arial;margin:0}}
         html+="</div></div>"
     html+="""
 <script>
-function toggleCountry(el){
-  var parent = el.parentElement;
-  parent.classList.toggle('open');
-  var arrow = el.querySelector('.arrow');
-  arrow.textContent = parent.classList.contains('open')? '▲' : '▼';
-}
 function loadTab(e, tab, type){
   e.stopPropagation();
   let box = tab.closest('.stats');
@@ -143,7 +137,7 @@ def stats():
     t=request.args.get("type"); home=request.args.get("home","Home"); away=request.args.get("away","Away"); code=request.args.get("code","eng.1")
     rh = get_real_avg(home, code, t)
     ra = get_real_avg(away, code, t)
-    return jsonify({"html": f"{rh}<br><br>{ra}<br><br><span style='color:#00ff88'>✓ Recent</span>"})
+    return jsonify({"html": f"{rh}<br><br>{ra}"})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
