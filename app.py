@@ -5,627 +5,124 @@ from flask import Flask, jsonify, request
 from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-
-# Botswana time (UTC+2)
 BOTSWANA_TZ = timezone(timedelta(hours=2))
 REQUEST_TIMEOUT = 10
-
 
 def hash_int(s):
     return int(hashlib.md5(s.encode("utf-8")).hexdigest()[:6], 16)
 
-
-# Deterministic fallback L5 model.
-# NOTE: This is only a fallback until real L5 data is connected.
 def last5(team):
     h = hash_int(team)
     values = []
     seed = h
-
     for i in range(5):
-        # Deterministic pseudo-values instead of random values.
         gf = ((seed >> (i * 3)) & 7) % 4
         ga = ((seed >> (i * 2 + 1)) & 7) % 3
         values.append((gf, ga))
-
     wins = sum(1 for gf, ga in values if gf > ga)
     draws = sum(1 for gf, ga in values if gf == ga)
     avg_gf = sum(gf for gf, ga in values) / 5.0
     avg_ga = sum(ga for gf, ga in values) / 5.0
     btts = sum(1 for gf, ga in values if gf > 0 and ga > 0) / 5.0
-
-    return {
-        "wins": wins,
-        "draws": draws,
-        "avg_gf": avg_gf,
-        "avg_ga": avg_ga,
-        "btts": btts,
-        "g": values,
-    }
-
+    return {"wins": wins,"draws": draws,"avg_gf": avg_gf,"avg_ga": avg_ga,"btts": btts,"g": values}
 
 def calc(home, away):
-    hs = last5(home)
-    aw = last5(away)
-
-    # Simple deterministic strength model.
-    h_str = (
-        hs["avg_gf"] * 0.60
-        + max(0, 5 - hs["avg_ga"]) * 0.20
-        + hs["wins"] * 0.20
-        + 0.40
-    )
-
-    a_str = (
-        aw["avg_gf"] * 0.60
-        + max(0, 5 - aw["avg_ga"]) * 0.20
-        + aw["wins"] * 0.20
-    )
-
+    hs = last5(home); aw = last5(away)
+    h_str = (hs["avg_gf"]*0.60 + max(0,5-hs["avg_ga"])*0.20 + hs["wins"]*0.20 + 0.40)
+    a_str = (aw["avg_gf"]*0.60 + max(0,5-aw["avg_ga"])*0.20 + aw["wins"]*0.20)
     total_strength = max(h_str + a_str, 0.01)
-
-    # Convert strengths into approximate 1X2 percentages.
-    hp = h_str / total_strength * 78
-    ap = a_str / total_strength * 78
-    dp = 100 - hp - ap
-
-    # Keep draw in a reasonable range.
-    if dp < 12:
-        extra = 12 - dp
-        hp -= extra / 2
-        ap -= extra / 2
-        dp = 12
-
-    if dp > 35:
-        extra = dp - 35
-        hp += extra / 2
-        ap += extra / 2
-        dp = 35
-
-    hp = round(max(1, hp), 1)
-    dp = round(max(1, dp), 1)
-    ap = round(max(1, 100 - hp - dp), 1)
-
-    # Deterministic expected goals.
-    expected_goals = max(
-        0.2,
-        min(
-            5.0,
-            (hs["avg_gf"] + aw["avg_gf"]) * 0.65
-            + (hs["avg_ga"] + aw["avg_ga"]) * 0.35
-            + 0.55,
-        ),
-    )
-
-    def over_probability(line):
-        # Smooth deterministic approximation.
-        # This is NOT a bookmaker probability.
-        value = 50 + (expected_goals - line) * 17
-        return round(min(95, max(5, value)), 1)
-
-    o05 = over_probability(0.5)
-    o15 = over_probability(1.5)
-    o25 = over_probability(2.5)
-    o35 = over_probability(3.5)
-    o45 = over_probability(4.5)
-
-    btts_yes = (
-        (hs["btts"] + aw["btts"]) / 2 * 100 * 0.85
-        + 10
-    )
-    btts_yes = round(min(88, max(22, btts_yes)), 1)
-
-    return {
-        "hp": hp,
-        "dp": dp,
-        "ap": ap,
-        "1x": round(hp + dp, 1),
-        "12": round(hp + ap, 1),
-        "x2": round(dp + ap, 1),
-        "o05": o05,
-        "u05": round(100 - o05, 1),
-        "o15": o15,
-        "u15": round(100 - o15, 1),
-        "o25": o25,
-        "u25": round(100 - o25, 1),
-        "o35": o35,
-        "u35": round(100 - o35, 1),
-        "o45": o45,
-        "u45": round(100 - o45, 1),
-        "bttsY": btts_yes,
-        "bttsN": round(100 - btts_yes, 1),
-        "hs": hs,
-        "aw": aw,
-        "expected_goals": round(expected_goals, 2),
-        "model_note": "Deterministic fallback model; connect real L5/H2H data for production betting analysis.",
-    }
-
+    hp = h_str/total_strength*78; ap = a_str/total_strength*78; dp = 100-hp-ap
+    if dp < 12: extra=12-dp; hp-=extra/2; ap-=extra/2; dp=12
+    if dp > 35: extra=dp-35; hp+=extra/2; ap+=extra/2; dp=35
+    hp=round(max(1,hp),1); dp=round(max(1,dp),1); ap=round(max(1,100-hp-dp),1)
+    expected_goals = max(0.2,min(5.0,(hs["avg_gf"]+aw["avg_gf"])*0.65+(hs["avg_ga"]+aw["avg_ga"])*0.35+0.55))
+    def over_probability(line): value=50+(expected_goals-line)*17; return round(min(95,max(5,value)),1)
+    o05=over_probability(0.5); o15=over_probability(1.5); o25=over_probability(2.5); o35=over_probability(3.5); o45=over_probability(4.5)
+    btts_yes = (hs["btts"]+aw["btts"])/2*100*0.85+10; btts_yes=round(min(88,max(22,btts_yes)),1)
+    return {"hp":hp,"dp":dp,"ap":ap,"1x":round(hp+dp,1),"12":round(hp+ap,1),"x2":round(dp+ap,1),"o05":o05,"u05":round(100-o05,1),"o15":o15,"u15":round(100-o15,1),"o25":o25,"u25":round(100-o25,1),"o35":o35,"u35":round(100-o35,1),"o45":o45,"u45":round(100-o45,1),"bttsY":btts_yes,"bttsN":round(100-btts_yes,1),"hs":hs,"aw":aw,"expected_goals":round(expected_goals,2),"model_note":"Deterministic fallback model; connect real L5/H2H data for production betting analysis."}
 
 def classify_country(league_name):
-    low = (league_name or "").lower()
-
-    if any(x in low for x in ["england", "premier league", "championship", "fa cup"]):
-        return "England", "🏴"
-    if any(x in low for x in ["knvb", "dutch", "eredivisie", "netherlands"]):
-        return "Netherlands", "🇳🇱"
-    if any(x in low for x in ["spain", "laliga", "la liga"]):
-        return "Spain", "🇪🇸"
-    if any(x in low for x in ["bundes", "germany"]):
-        return "Germany", "🇩🇪"
-    if any(x in low for x in ["serie", "italy"]):
-        return "Italy", "🇮🇹"
-    if any(x in low for x in ["ligue", "france"]):
-        return "France", "🇫🇷"
-    if any(x in low for x in ["uefa", "champions"]):
-        return "Europe", "🇪🇺"
-    if "women" in low:
-        return "World Women", "🌍"
-
-    return "World", "🌍"
-
+    low=(league_name or "").lower()
+    if any(x in low for x in ["england","premier league","championship","fa cup"]): return "England","🏴󠁧󐁢󐁥󐁮󐁧󐁿"
+    if any(x in low for x in ["knvb","dutch","eredivisie","netherlands"]): return "Netherlands","🇳🇱"
+    if any(x in low for x in ["spain","laliga","la liga"]): return "Spain","🇪🇸"
+    if any(x in low for x in ["bundes","germany"]): return "Germany","🇩🇪"
+    if any(x in low for x in ["serie","italy"]): return "Italy","🇮🇹"
+    if any(x in low for x in ["ligue","france"]): return "France","🇫🇷"
+    if any(x in low for x in ["uefa","champions"]): return "Europe","🇪🇺"
+    if "women" in low: return "World Women","🌍"
+    return "World","🌍"
 
 def fetch_espn():
-    games = []
-
-    today = datetime.now(BOTSWANA_TZ).strftime("%Y%m%d")
-
-    urls = [
-        f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={today}&limit=400",
-        f"https://site.web.api.espn.com/apis/v2/scoreboard?region=za&lang=en&sport=soccer&limit=400&dates={today}",
-    ]
-
-    headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json",
-    }
-
-    for url in urls:
-        try:
-            response = requests.get(
-                url,
-                headers=headers,
-                timeout=REQUEST_TIMEOUT,
-            )
-            response.raise_for_status()
-
-            data = response.json()
-            events = data.get("events", [])
-
-            for event in events:
-                competitions = event.get("competitions") or []
-                if not competitions:
-                    continue
-
-                comp = competitions[0]
-                competitors = comp.get("competitors") or []
-
-                if len(competitors) < 2:
-                    continue
-
-                home = next(
-                    (x for x in competitors if x.get("homeAway") == "home"),
-                    competitors[0],
-                )
-                away = next(
-                    (x for x in competitors if x.get("homeAway") == "away"),
-                    competitors[1],
-                )
-
-                league = (
-                    data.get("leagues", [{}])[0]
-                    if data.get("leagues")
-                    else {}
-                )
-
-                league_name = (
-                    league.get("name")
-                    or event.get("name")
-                    or event.get("shortName")
-                    or "Football"
-                )
-
-                country, flag = classify_country(league_name)
-
-                status_obj = comp.get("status") or {}
-                status_type = status_obj.get("type") or {}
-
-                state = status_type.get("state", "")
-                short_detail = (
-                    status_type.get("shortDetail")
-                    or status_type.get("detail")
-                    or "TBD"
-                )
-
-                live = (
-                    state == "in"
-                    or "LIVE" in short_detail.upper()
-                    or "HALF" in short_detail.upper()
-                )
-
-                home_name = (
-                    home.get("team", {}).get("displayName")
-                    or home.get("team", {}).get("shortDisplayName")
-                    or "Home"
-                )
-
-                away_name = (
-                    away.get("team", {}).get("displayName")
-                    or away.get("team", {}).get("shortDisplayName")
-                    or "Away"
-                )
-
-                games.append(
-                    {
-                        "league": league_name,
-                        "leagueName": league_name,
-                        "country": country,
-                        "flag": flag,
-                        "home": home_name[:40],
-                        "away": away_name[:40],
-                        "score": short_detail,
-                        "live": live,
-                    }
-                )
-
-            # Don't need the second endpoint if the first already returned data.
-            if games:
-                break
-
-        except requests.RequestException as exc:
-            print(f"ESPN request failed: {url}")
-            print(f"Network error: {exc}")
-        except ValueError as exc:
-            print(f"Invalid ESPN JSON from: {url}")
-            print(f"JSON error: {exc}")
-        except Exception as exc:
-            print(f"Unexpected ESPN error: {url}")
-            print(f"Error: {exc}")
-
-    # Remove duplicates.
-    seen = set()
-    output = []
-
-    for game in games:
-        key = (
-            game["home"].lower(),
-            game["away"].lower(),
-            game["leagueName"].lower(),
-        )
-
-        if key not in seen:
-            seen.add(key)
-            output.append(game)
-
-    return output
-
+    games=[]
+    now=datetime.now(BOTSWANA_TZ)
+    dates=[(now+timedelta(days=d)).strftime("%Y%m%d") for d in [0,-1,1]]
+    LEAGUES=["eng.1","eng.2","eng.fa","esp.1","ger.1","ita.1","fra.1","ned.1","ned.cup","por.1","bel.1","tur.1","sco.1","den.1","swe.1","rsa.1","usa.1","uefa.champions","uefa.europa","uefa.wchampions"]
+    headers={"User-Agent":"Mozilla/5.0","Accept":"application/json","Referer":"https://africa.espn.com/football/fixtures"}
+    for date_str in dates:
+        if len(games)>25: break
+        for url in [f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={date_str}&limit=400", f"https://site.web.api.espn.com/apis/v2/scoreboard?region=za&lang=en&sport=soccer&limit=400&dates={date_str}"]:
+            try:
+                r=requests.get(url,headers=headers,timeout=REQUEST_TIMEOUT)
+                if r.status_code!=200: continue
+                data=r.json()
+                for event in data.get("events",[]):
+                    comp=(event.get("competitions") or [{}])[0]; cs=comp.get("competitors") or []
+                    if len(cs)<2: continue
+                    home=next((x for x in cs if x.get("homeAway")=="home"),cs[0]); away=next((x for x in cs if x.get("homeAway")=="away"),cs[1])
+                    league=data.get("leagues",[{}])[0] if data.get("leagues") else {}
+                    lname=league.get("name") or event.get("shortName") or "Football"
+                    country,flag=classify_country(lname)
+                    st=(comp.get("status",{}).get("type",{}) or {}); short=st.get("shortDetail") or "TBD"; live=st.get("state")=="in" or "LIVE" in short.upper()
+                    games.append({"league":lname,"leagueName":lname,"country":country,"flag":flag,"home":(home.get("team",{}).get("displayName") or "Home")[:40],"away":(away.get("team",{}).get("displayName") or "Away")[:40],"score":short,"live":live})
+                if games: break
+            except requests.RequestException as exc:
+                print(f"ESPN request failed: {url} {exc}")
+            except Exception as exc:
+                print(f"Unexpected ESPN error: {url} {exc}")
+        if len(games)<8:
+            for code in LEAGUES:
+                try:
+                    url=f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={date_str}"
+                    r=requests.get(url,headers=headers,timeout=4)
+                    if r.status_code!=200: continue
+                    data=r.json()
+                    for ev in data.get("events",[])[:3]:
+                        comp=(ev.get("competitions") or [{}])[0]; cs=comp.get("competitors") or []
+                        if len(cs)<2: continue
+                        home=next((x for x in cs if x.get("homeAway")=="home"),cs[0]); away=next((x for x in cs if x.get("homeAway")=="away"),cs[1])
+                        lname=data.get("leagues",[{}])[0].get("name") or code; country,flag=classify_country(lname)
+                        st=(comp.get("status",{}).get("type",{}) or {}); games.append({"league":lname,"leagueName":lname,"country":country,"flag":flag,"home":(home.get("team",{}).get("displayName") or "Home")[:40],"away":(away.get("team",{}).get("displayName") or "Away")[:40],"score":st.get("shortDetail") or "TBD","live":st.get("state")=="in"})
+                except: continue
+    seen=set(); out=[]
+    for g in games:
+        k=(g["home"].lower(),g["away"].lower(),g["leagueName"].lower())
+        if k not in seen: seen.add(k); out.append(g)
+    return out
 
 @app.route("/api/games")
 def api_games():
-    games = fetch_espn()
-
-    # Do not silently pretend these are real fixtures.
-    # If ESPN is unavailable, return an empty list and an error message.
+    games=fetch_espn()
     if not games:
-        return jsonify(
-            {
-                "games": [],
-                "error": "No ESPN fixtures were returned. Check the server logs or ESPN availability.",
-            }
-        )
-
-    return jsonify(
-        {
-            "games": games,
-            "error": None,
-            "date": datetime.now(BOTSWANA_TZ).strftime("%Y-%m-%d"),
-        }
-    )
-
+        return jsonify({"games":[],"error":"No ESPN fixtures were returned. Check the server logs or ESPN availability."})
+    return jsonify({"games":games,"error":None,"date":datetime.now(BOTSWANA_TZ).strftime("%Y-%m-%d"),"count":len(games)})
 
 @app.route("/api/prob")
 def api_prob():
-    home = request.args.get("home", "Home").strip()
-    away = request.args.get("away", "Away").strip()
-
-    if not home or not away:
-        return jsonify({"error": "Both home and away teams are required."}), 400
-
-    probability = calc(home, away)
-    p = probability
-
-    html = f"""
-<div class='card'>
-<div class='chead'>⚽ Full-Time <span class='free'>L5</span></div>
-<div class='row3'>
-<div><small>HOME</small><b>{p['hp']}%</b><div class='bar'><div style='width:{p['hp']}%'></div></div></div>
-<div><small>DRAW</small><b>{p['dp']}%</b><div class='bar'><div style='width:{p['dp']}%'></div></div></div>
-<div><small>AWAY</small><b>{p['ap']}%</b><div class='bar'><div style='width:{p['ap']}%'></div></div></div>
-</div>
-<small style='color:#8a96a8'>
-L5 {home}: W{p['hs']['wins']} D{p['hs']['draws']} |
-{p['hs']['avg_gf']:.1f} GF / {p['hs']['avg_ga']:.1f} GA
-<br>
-L5 {away}: W{p['aw']['wins']} D{p['aw']['draws']} |
-{p['aw']['avg_gf']:.1f} GF / {p['aw']['avg_ga']:.1f} GA
-</small>
-</div>
-
-<div class='card'>
-<div class='chead'>🛡️ Double Chance</div>
-<div class='row3'>
-<div><small>1X</small><b>{p['1x']}%</b><div class='bar'><div style='width:{p['1x']}%'></div></div></div>
-<div><small>12</small><b>{p['12']}%</b><div class='bar'><div style='width:{p['12']}%'></div></div></div>
-<div><small>X2</small><b>{p['x2']}%</b><div class='bar'><div style='width:{p['x2']}%'></div></div></div>
-</div>
-</div>
-
-<div class='card'>
-<div class='chead'>📊 Total Goals</div>
-
-<div class='grow'><span>+0.5</span><div class='bar2'><div style='width:{p['o05']}%'></div></div><b>{p['o05']}%</b></div>
-<div class='grow'><span>-0.5</span><div class='bar2'><div style='width:{p['u05']}%'></div></div><b>{p['u05']}%</b></div>
-
-<div class='grow'><span>+1.5</span><div class='bar2'><div style='width:{p['o15']}%'></div></div><b>{p['o15']}%</b></div>
-<div class='grow'><span>-1.5</span><div class='bar2'><div style='width:{p['u15']}%'></div></div><b>{p['u15']}%</b></div>
-
-<div class='grow'><span>+2.5</span><div class='bar2'><div style='width:{p['o25']}%'></div></div><b>{p['o25']}%</b></div>
-<div class='grow'><span>-2.5</span><div class='bar2'><div style='width:{p['u25']}%'></div></div><b>{p['u25']}%</b></div>
-
-<div class='grow'><span>+3.5</span><div class='bar2'><div style='width:{p['o35']}%'></div></div><b>{p['o35']}%</b></div>
-<div class='grow'><span>-3.5</span><div class='bar2'><div style='width:{p['u35']}%'></div></div><b>{p['u35']}%</b></div>
-
-<div class='grow'><span>+4.5</span><div class='bar2'><div style='width:{p['o45']}%'></div></div><b>{p['o45']}%</b></div>
-<div class='grow'><span>-4.5</span><div class='bar2'><div style='width:{p['u45']}%'></div></div><b>{p['u45']}%</b></div>
-
-<small style='color:#8a96a8'>
-Expected goals: {p['expected_goals']}
-</small>
-</div>
-
-<div class='card'>
-<div class='chead'>🤝 BTTS</div>
-<div class='row2'>
-<div><small>YES</small><b>{p['bttsY']}%</b><div class='bar'><div style='width:{p['bttsY']}%'></div></div></div>
-<div><small>NO</small><b>{p['bttsN']}%</b><div class='bar'><div style='width:{p['bttsN']}%'></div></div></div>
-</div>
-</div>
-
-<div class='note'>
-⚠️ {p['model_note']}
-</div>
-"""
-
-    return jsonify({"html": html})
-
+    home=request.args.get("home","Home").strip(); away=request.args.get("away","Away").strip()
+    if not home or not away: return jsonify({"error":"Both home and away teams are required."}),400
+    p=calc(home,away)
+    html=f"""<div class='card'><div class='chead'>⚽ Full-Time <span class='free'>L5</span></div><div class='row3'><div><small>HOME</small><b>{p['hp']}%</b><div class='bar'><div style='width:{p['hp']}%'></div></div></div><div><small>DRAW</small><b>{p['dp']}%</b><div class='bar'><div style='width:{p['dp']}%'></div></div></div><div><small>AWAY</small><b>{p['ap']}%</b><div class='bar'><div style='width:{p['ap']}%'></div></div></div></div><small style='color:#8a96a8'>L5 {home}: W{p['hs']['wins']} D{p['hs']['draws']} | {p['hs']['avg_gf']:.1f} GF / {p['hs']['avg_ga']:.1f} GA<br>L5 {away}: W{p['aw']['wins']} D{p['aw']['draws']} | {p['aw']['avg_gf']:.1f} GF / {p['aw']['avg_ga']:.1f} GA</small></div><div class='card'><div class='chead'>🛡️ Double Chance</div><div class='row3'><div><small>1X</small><b>{p['1x']}%</b><div class='bar'><div style='width:{p['1x']}%'></div></div></div><div><small>12</small><b>{p['12']}%</b><div class='bar'><div style='width:{p['12']}%'></div></div></div><div><small>X2</small><b>{p['x2']}%</b><div class='bar'><div style='width:{p['x2']}%'></div></div></div></div></div><div class='card'><div class='chead'>📊 Total Goals</div><div class='grow'><span>+0.5</span><div class='bar2'><div style='width:{p['o05']}%'></div></div><b>{p['o05']}%</b></div><div class='grow'><span>-0.5</span><div class='bar2'><div style='width:{p['u05']}%'></div></div><b>{p['u05']}%</b></div><div class='grow'><span>+1.5</span><div class='bar2'><div style='width:{p['o15']}%'></div></div><b>{p['o15']}%</b></div><div class='grow'><span>-1.5</span><div class='bar2'><div style='width:{p['u15']}%'></div></div><b>{p['u15']}%</b></div><div class='grow'><span>+2.5</span><div class='bar2'><div style='width:{p['o25']}%'></div></div><b>{p['o25']}%</b></div><div class='grow'><span>-2.5</span><div class='bar2'><div style='width:{p['u25']}%'></div></div><b>{p['u25']}%</b></div><div class='grow'><span>+3.5</span><div class='bar2'><div style='width:{p['o35']}%'></div></div><b>{p['o35']}%</b></div><div class='grow'><span>-3.5</span><div class='bar2'><div style='width:{p['u35']}%'></div></div><b>{p['u35']}%</b></div><div class='grow'><span>+4.5</span><div class='bar2'><div style='width:{p['o45']}%'></div></div><b>{p['o45']}%</b></div><div class='grow'><span>-4.5</span><div class='bar2'><div style='width:{p['u45']}%'></div></div><b>{p['u45']}%</b></div><small style='color:#8a96a8'>Expected goals: {p['expected_goals']}</small></div><div class='card'><div class='chead'>🤝 BTTS</div><div class='row2'><div><small>YES</small><b>{p['bttsY']}%</b><div class='bar'><div style='width:{p['bttsY']}%'></div></div></div><div><small>NO</small><b>{p['bttsN']}%</b><div class='bar'><div style='width:{p['bttsN']}%'></div></div></div></div></div><div class='note'>⚠️ {p['model_note']}</div>"""
+    return jsonify({"html":html})
 
 @app.route("/")
 def home():
-    return """<!doctype html>
-<html>
-<head>
-<meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>Football Analysis</title>
-<style>
-body{margin:0;background:#1c2333;color:#fff;font-family:Arial,sans-serif}
-.top{padding:12px;display:flex;justify-content:space-between;background:#1c2333;position:sticky;top:0;z-index:10}
-.live-btn{background:#2a3447;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer}
-.live-btn.active{background:#ff4444;color:#fff}
-.country-head{padding:14px 12px;font-weight:bold;background:#0f141f;display:flex;justify-content:space-between;cursor:pointer;border-bottom:1px solid #242f44}
-.league-tabs{display:flex;gap:8px;padding:8px 12px;overflow-x:auto;background:#121a2a;white-space:nowrap}
-.ltab{padding:6px 12px;background:#1a2535;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #2a3447;flex-shrink:0}
-.ltab.active{background:#00ff88;color:#000;font-weight:bold}
-.fixtures-wrap{background:#121a2a;padding-bottom:8px}
-.fixture{background:#242f44;margin:8px 12px;padding:12px;border-radius:10px;cursor:pointer;border-left:3px solid #00ff88}
-.fixture.live{border-left-color:#ff4444}
-.stats{display:none;background:#0f141f;margin:0 12px 12px;padding:8px;border-radius:10px}
-.stats.open{display:block}
-.card{background:#242f44;margin:10px 0;padding:12px;border-radius:12px}
-.chead{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;font-size:13px}
-.free{font-size:9px;background:#00ff8822;border:1px solid #00ff88;color:#00ff88;padding:3px 8px;border-radius:12px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bar{height:6px;background:#1c2333;border-radius:10px;margin-top:4px}
-.bar div{height:6px;background:#00ff88;border-radius:10px}
-.bar2{flex:1;height:6px;background:#1c2333;border-radius:10px;margin:0 8px}
-.bar2 div{height:6px;background:#6c4cff;border-radius:10px}
-.grow{display:flex;align-items:center;justify-content:space-between;margin:7px 0;font-size:12px}
-.note{background:#3b2d10;color:#ffd56a;padding:10px;border-radius:10px;font-size:11px;margin-top:10px}
-.error{margin:12px;padding:15px;background:#3b1820;border-radius:10px;color:#ff9ba8}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:#1c2333;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #2a3447;font-size:14px}
-</style>
-</head>
-
-<body>
-<div class='top'>
-<h3 style='margin:0'>Today <span id='count' style='color:#00ff88'></span></h3>
-<div class='live-btn' id='liveBtn' onclick='showLive()'>● LIVE</div>
-</div>
-
-<div id='loader' style='padding:20px;text-align:center;color:#8a96a8'>
-Loading ESPN fixtures...
-</div>
-
-<div id='list'></div>
-<div style='height:80px'></div>
-
-<div class='bottom'>
-<div id='btn-fixtures'>🗓️ Fixtures</div>
-<div>🔔 Alerts</div>
-<div>📈 Trends</div>
-<div>☰ More</div>
-</div>
-
-<script>
-let allGames=[];
-let view='fixtures';
-let openC={};
-let selL={};
-
-function showLive(){
-    view=view==='live'?'fixtures':'live';
-    document.getElementById('liveBtn').classList.toggle('active');
-    render();
-}
-
-function toggleC(k){
-    openC[k]=!openC[k];
-    render();
-}
-
-function selectL(ck,l){
-    selL[ck]=l;
-    render();
-}
-
-function escapeHtml(value){
-    return String(value)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'","&#039;");
-}
-
-function render(){
-    let html='';
-    let filt=view==='live' ? allGames.filter(g=>g.live) : allGames;
-    let by={};
-
-    filt.forEach(g=>{
-        let k=g.flag+'|'+g.country;
-        if(!by[k]) by[k]=[];
-        by[k].push(g);
-    });
-
-    document.getElementById('count').innerText='('+filt.length+')';
-
-    if(filt.length===0){
-        html="<div class='error'>No fixtures were returned. Check the server log and ESPN connection.</div>";
-    }
-
-    for(let ck in by){
-        let games=by[ck];
-        let parts=ck.split('|');
-        let flag=parts[0];
-        let country=parts[1];
-        let isOpen=openC[ck]!==false;
-
-        let leagues=[...new Set(games.map(x=>x.leagueName))];
-
-        if(!selL[ck]) selL[ck]=leagues[0];
-        let sel=selL[ck];
-
-        let liveC=games.filter(x=>x.live).length;
-
-        html+=`<div class='country-head' onclick='toggleC(${JSON.stringify(ck)})'>
-            <span>${flag} ${escapeHtml(country)} (${games.length}) ${liveC>0?'🔴'+liveC:''}</span>
-            <span>${isOpen?'▼':'▶'}</span>
-        </div>`;
-
-        if(isOpen){
-            html+=`<div class='league-tabs'>`;
-
-            leagues.forEach(l=>{
-                let c=games.filter(x=>x.leagueName===l).length;
-                let act=l===sel?'active':'';
-
-                html+=`<div class='ltab ${act}' onclick='event.stopPropagation();selectL(${JSON.stringify(ck)},${JSON.stringify(l)})'>
-                    ${escapeHtml(l)} (${c})
-                </div>`;
-            });
-
-            html+=`</div><div class='fixtures-wrap'>`;
-
-            games.filter(x=>x.leagueName===sel).forEach((f,i)=>{
-                let uid=btoa(unescape(encodeURIComponent(
-                    ck+'|'+f.home+'|'+f.away+'|'+i
-                ))).replace(/[^a-zA-Z0-9]/g,'');
-
-                html+=`
-                <div class='fixture ${f.live?'live':''}'
-                     onclick='openP(${JSON.stringify(f.home)},${JSON.stringify(f.away)},${JSON.stringify(uid)})'>
-                    <div style='display:flex;justify-content:space-between;gap:8px'>
-                        <b>${escapeHtml(f.home)}</b>
-                        <span>vs</span>
-                        <b>${escapeHtml(f.away)}</b>
-                        <span style='color:#ffcc00'>${escapeHtml(f.score)}</span>
-                    </div>
-                    <small style='color:#8a96a8'>${escapeHtml(f.leagueName)}</small>
-                </div>
-                <div class='stats' id='stats-${uid}'></div>`;
-            });
-
-            html+=`</div>`;
-        }
-    }
-
-    document.getElementById('list').innerHTML=html;
-    document.getElementById('loader').style.display='none';
-}
-
-function openP(h,a,uid){
-    let b=document.getElementById('stats-'+uid);
-
-    if(!b) return;
-
-    b.classList.toggle('open');
-
-    if(b.dataset.loaded) return;
-
-    b.innerHTML='Calculating L5...';
-
-    fetch('/api/prob?home='+encodeURIComponent(h)+'&away='+encodeURIComponent(a))
-        .then(r=>{
-            if(!r.ok) throw new Error('Probability request failed: '+r.status);
-            return r.json();
-        })
-        .then(j=>{
-            if(j.error){
-                b.innerHTML="<div class='error'>"+escapeHtml(j.error)+"</div>";
-                return;
-            }
-            b.innerHTML=j.html;
-            b.dataset.loaded='1';
-        })
-        .catch(err=>{
-            b.innerHTML="<div class='error'>Unable to load analysis: "+escapeHtml(err.message)+"</div>";
-        });
-}
-
-fetch('/api/games')
-    .then(r=>{
-        if(!r.ok) throw new Error('Fixtures request failed: '+r.status);
-        return r.json();
-    })
-    .then(data=>{
-        allGames=data.games || [];
-
-        if(data.error){
-            document.getElementById('loader').innerHTML=
-                "<div class='error'>"+escapeHtml(data.error)+"</div>";
-        }
-
-        render();
-    })
-    .catch(err=>{
-        document.getElementById('loader').innerHTML=
-            "<div class='error'>Unable to load fixtures: "+escapeHtml(err.message)+"</div>";
-    });
-</script>
-</body>
-</html>"""
-
+    return """<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><title>Football Analysis</title><style>body{margin:0;background:#1c2333;color:#fff;font-family:Arial,sans-serif}.top{padding:12px;display:flex;justify-content:space-between;background:#1c2333;position:sticky;top:0;z-index:10}.live-btn{background:#2a3447;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer}.live-btn.active{background:#ff4444;color:#fff}.country-head{padding:14px 12px;font-weight:bold;background:#0f141f;display:flex;justify-content:space-between;cursor:pointer;border-bottom:1px solid #242f44}.league-tabs{display:flex;gap:8px;padding:8px 12px;overflow-x:auto;background:#121a2a;white-space:nowrap}.ltab{padding:6px 12px;background:#1a2535;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #2a3447;flex-shrink:0}.ltab.active{background:#00ff88;color:#000;font-weight:bold}.fixtures-wrap{background:#121a2a;padding-bottom:8px}.fixture{background:#242f44;margin:8px 12px;padding:12px;border-radius:10px;cursor:pointer;border-left:3px solid #00ff88}.fixture.live{border-left-color:#ff4444}.stats{display:none;background:#0f141f;margin:0 12px 12px;padding:8px;border-radius:10px}.stats.open{display:block}.card{background:#242f44;margin:10px 0;padding:12px;border-radius:12px}.chead{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;font-size:13px}.free{font-size:9px;background:#00ff8822;border:1px solid #00ff88;color:#00ff88;padding:3px 8px;border-radius:12px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bar{height:6px;background:#1c2333;border-radius:10px;margin-top:4px}.bar div{height:6px;background:#00ff88;border-radius:10px}.bar2{flex:1;height:6px;background:#1c2333;border-radius:10px;margin:0 8px}.bar2 div{height:6px;background:#6c4cff;border-radius:10px}.grow{display:flex;align-items:center;justify-content:space-between;margin:7px 0;font-size:12px}.note{background:#3b2d10;color:#ffd56a;padding:10px;border-radius:10px;font-size:11px;margin-top:10px}.error{margin:12px;padding:15px;background:#3b1820;border-radius:10px;color:#ff9ba8}.bottom{position:fixed;bottom:0;left:0;right:0;background:#1c2333;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #2a3447;font-size:14px}</style></head><body><div class='top'><h3 style='margin:0'>Today <span id='count' style='color:#00ff88'></span></h3><div class='live-btn' id='liveBtn' onclick='showLive()'>● LIVE</div></div><div id='loader' style='padding:20px;text-align:center;color:#8a96a8'>Loading ESPN fixtures...</div><div id='list'></div><div style='height:80px'></div><div class='bottom'><div id='btn-fixtures'>🗓️ Fixtures</div><div>🔔 Alerts</div><div>📈 Trends</div><div>☰ More</div></div><script>let allGames=[];let view='fixtures';let openC={};let selL={};function showLive(){view=view==='live'?'fixtures':'live';document.getElementById('liveBtn').classList.toggle('active');render();}function toggleC(k){openC[k]=!openC[k];render();}function selectL(ck,l){selL[ck]=l;render();}function escapeHtml(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");}function render(){let html='';let filt=view==='live'?allGames.filter(g=>g.live):allGames;let by={};filt.forEach(g=>{let k=g.flag+'|'+g.country;if(!by[k])by[k]=[];by[k].push(g);});document.getElementById('count').innerText='('+filt.length+')';if(filt.length===0){html="<div class='error'>No fixtures were returned. Check the server log and ESPN connection.</div>";}for(let ck in by){let games=by[ck];let parts=ck.split('|');let flag=parts[0];let country=parts[1];let isOpen=openC[ck]!==false;let leagues=[...new Set(games.map(x=>x.leagueName))];if(!selL[ck])selL[ck]=leagues[0];let sel=selL[ck];let liveC=games.filter(x=>x.live).length;html+=`<div class='country-head' onclick='toggleC(${JSON.stringify(ck)})'><span>${flag} ${escapeHtml(country)} (${games.length}) ${liveC>0?'🔴'+liveC:''}</span><span>${isOpen?'▼':'▶'}</span></div>`;if(isOpen){html+=`<div class='league-tabs'>`;leagues.forEach(l=>{let c=games.filter(x=>x.leagueName===l).length;let act=l===sel?'active':'';html+=`<div class='ltab ${act}' onclick='event.stopPropagation();selectL(${JSON.stringify(ck)},${JSON.stringify(l)})'>${escapeHtml(l)} (${c})</div>`;});html+=`</div><div class='fixtures-wrap'>`;games.filter(x=>x.leagueName===sel).forEach((f,i)=>{let uid=btoa(unescape(encodeURIComponent(ck+'|'+f.home+'|'+f.away+'|'+i))).replace(/[^a-zA-Z0-9]/g,'');html+=`<div class='fixture ${f.live?'live':''}' onclick='openP(${JSON.stringify(f.home)},${JSON.stringify(f.away)},${JSON.stringify(uid)})'><div style='display:flex;justify-content:space-between;gap:8px'><b>${escapeHtml(f.home)}</b><span>vs</span><b>${escapeHtml(f.away)}</b><span style='color:#ffcc00'>${escapeHtml(f.score)}</span></div><small style='color:#8a96a8'>${escapeHtml(f.leagueName)}</small></div><div class='stats' id='stats-${uid}'></div>`;});html+=`</div>`;}}document.getElementById('list').innerHTML=html;document.getElementById('loader').style.display='none';}function openP(h,a,uid){let b=document.getElementById('stats-'+uid);if(!b)return;b.classList.toggle('open');if(b.dataset.loaded)return;b.innerHTML='Calculating L5...';fetch('/api/prob?home='+encodeURIComponent(h)+'&away='+encodeURIComponent(a)).then(r=>{if(!r.ok)throw new Error('Probability request failed: '+r.status);return r.json();}).then(j=>{if(j.error){b.innerHTML="<div class='error'>"+escapeHtml(j.error)+"</div>";return;}b.innerHTML=j.html;b.dataset.loaded='1';}).catch(err=>{b.innerHTML="<div class='error'>Unable to load analysis: "+escapeHtml(err.message)+"</div>";});}fetch('/api/games').then(r=>{if(!r.ok)throw new Error('Fixtures request failed: '+r.status);return r.json();}).then(data=>{allGames=data.games||[];if(data.error){document.getElementById('loader').innerHTML="<div class='error'>"+escapeHtml(data.error)+"</div>";}render();}).catch(err=>{document.getElementById('loader').innerHTML="<div class='error'>Unable to load fixtures: "+escapeHtml(err.message)+"</div>";});</script></body></html>"""
 
 @app.route("/health")
 def health():
-    return jsonify(
-        {
-            "status": "ok",
-            "time_botswana": datetime.now(BOTSWANA_TZ).isoformat(),
-        }
-    )
+    return jsonify({"status":"ok","time_botswana":datetime.now(BOTSWANA_TZ).isoformat()})
 
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+if __name__=="__main__":
+    port=int(os.environ.get("PORT",10000))
+    app.run(host="0.0.0.0",port=port)
