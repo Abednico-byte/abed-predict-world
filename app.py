@@ -217,9 +217,7 @@ LEAGUES = [
 ]
 
 def parse_status(st_type: dict, home_score, away_score) -> tuple:
-    """Return (category, display_score) where category is pre|live|post.
-    display_score examples: '1-0  70''  |  '2-1 FT'  |  '20:00' / 'TBD'
-    """
+    """Return (category, display_score) where category is pre|live|post."""
     state = (st_type.get("state") or "").lower()
     short = st_type.get("shortDetail") or st_type.get("detail") or "TBD"
     completed = st_type.get("completed", False)
@@ -241,7 +239,7 @@ def fetch_espn():
     now = datetime.now(BOTSWANA_TZ)
     dates = [(now + timedelta(days=d)).strftime("%Y%m%d") for d in [0, -1, 1, 2]]
 
-    # 1. League-specific calls (best league names)
+    # 1. League-specific calls
     for code, fallback_name in LEAGUES:
         for date_str in dates:
             data = get_json(
@@ -527,93 +525,110 @@ function selectL(ck, l) {
 
 function escapeHtml(v) {
   return String(v)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function escAttr(v) {
+  return String(v).replace(/\\\\/g, "\\\\\\\\").replace(/'/g, "\\\\'");
 }
 
 function renderGroup(games, sectionTitle) {
   if (!games.length) return "";
-  let html = "";
+  var html = "";
   if (sectionTitle) {
-    html += `<div class="section-head">${sectionTitle}</div>`;
+    html += '<div class="section-head">' + escapeHtml(sectionTitle) + '</div>';
   }
 
-  const byCountry = {};
-  games.forEach(g => {
-    const k = g.flag + "|" + g.country;
+  var byCountry = {};
+  games.forEach(function(g) {
+    var k = g.flag + "|" + g.country;
     if (!byCountry[k]) byCountry[k] = [];
     byCountry[k].push(g);
   });
 
-  const keys = Object.keys(byCountry).sort((a, b) => {
-    const ca = a.split("|")[1], cb = b.split("|")[1];
+  var keys = Object.keys(byCountry).sort(function(a, b) {
+    var ca = a.split("|")[1], cb = b.split("|")[1];
     if (ca === "Europe") return -1;
     if (cb === "Europe") return 1;
     return ca.localeCompare(cb);
   });
 
-  for (const ck of keys) {
-    const countryGames = byCountry[ck];
-    const parts = ck.split("|");
-    const flag = parts[0];
-    const country = parts[1];
-    const isOpen = openC[ck] !== false;
-    const leagues = [...new Set(countryGames.map(x => x.leagueName))];
+  for (var ki = 0; ki < keys.length; ki++) {
+    var ck = keys[ki];
+    var countryGames = byCountry[ck];
+    var parts = ck.split("|");
+    var flag = parts[0];
+    var country = parts[1];
+    var isOpen = openC[ck] !== false;
+    var leagues = [];
+    var seenL = {};
+    countryGames.forEach(function(x) {
+      if (!seenL[x.leagueName]) { seenL[x.leagueName] = 1; leagues.push(x.leagueName); }
+    });
     if (!selL[ck]) selL[ck] = leagues[0];
-    const sel = selL[ck];
-    const liveC = countryGames.filter(x => x.live).length;
+    var sel = selL[ck];
+    var liveC = 0;
+    countryGames.forEach(function(x) { if (x.live) liveC++; });
 
-    html += `<div class="country-head" onclick="toggleC('${ck.replace(/'/g, "\\\\'")}')">
-      <span>${flag} \( {escapeHtml(country)} ( \){countryGames.length})${liveC > 0 ? ' <span style="color:#ff4444">🔴' + liveC + '</span>' : ''}</span>
-      <span style="opacity:.6">${isOpen ? "▼" : "▶"}</span>
-    </div>`;
+    html += '<div class="country-head" onclick="toggleC(\\'' + escAttr(ck) + '\\')">';
+    html += '<span>' + flag + ' ' + escapeHtml(country) + ' (' + countryGames.length + ')';
+    if (liveC > 0) html += ' <span style="color:#ff4444">&#128308;' + liveC + '</span>';
+    html += '</span>';
+    html += '<span style="opacity:.6">' + (isOpen ? "&#9660;" : "&#9654;") + '</span>';
+    html += '</div>';
 
     if (isOpen) {
-      html += `<div class="league-tabs">`;
-      leagues.forEach(l => {
-        const c = countryGames.filter(x => x.leagueName === l).length;
-        const act = l === sel ? "active" : "";
-        html += `<div class="ltab \( {act}" onclick="event.stopPropagation();selectL(' \){ck.replace(/'/g, "\\\\'")}','\( {String(l).replace(/'/g, "\\\\'")}')"> \){escapeHtml(l)} (${c})</div>`;
+      html += '<div class="league-tabs">';
+      leagues.forEach(function(l) {
+        var c = 0;
+        countryGames.forEach(function(x) { if (x.leagueName === l) c++; });
+        var act = (l === sel) ? "active" : "";
+        html += '<div class="ltab ' + act + '" onclick="event.stopPropagation();selectL(\\'' + escAttr(ck) + '\\',\\'' + escAttr(l) + '\\')">' + escapeHtml(l) + ' (' + c + ')</div>';
       });
-      html += `</div><div class="fixtures-wrap">`;
+      html += '</div><div class="fixtures-wrap">';
 
-      countryGames.filter(x => x.leagueName === sel).forEach((f, i) => {
-        const uid = btoa(unescape(encodeURIComponent(ck + "|" + f.home + "|" + f.away + "|" + i))).replace(/[^a-zA-Z0-9]/g, "");
-        const isLive = f.status === "live";
-        const dateStr = f.date ? escapeHtml(f.date) : "";
-        const sub = [escapeHtml(f.leagueName), dateStr].filter(Boolean).join(" · ");
-        html += `
-          <div class="fixture \( {isLive ? "live" : ""}" onclick="openP(' \){escapeHtml(f.home).replace(/'/g, "\\\\'")}','\( {escapeHtml(f.away).replace(/'/g, "\\\\'")}',' \){uid}')">
-            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-              <b style="flex:1;text-align:right;font-size:13px">${escapeHtml(f.home)}</b>
-              <span style="opacity:.5;font-size:12px">vs</span>
-              <b style="flex:1;font-size:13px">${escapeHtml(f.away)}</b>
-              <span style="color:\( {isLive ? "#ff6666" : "#ffcc00"};min-width:70px;text-align:right;font-size:13px;font-weight:600;white-space:nowrap"> \){escapeHtml(f.score)}</span>
-            </div>
-            <small style="color:#8a96a8;display:block;margin-top:5px;font-size:11px">${sub}</small>
-          </div>
-          <div class="stats" id="stats-${uid}"></div>`;
+      countryGames.forEach(function(f, i) {
+        if (f.leagueName !== sel) return;
+        var uid = btoa(unescape(encodeURIComponent(ck + "|" + f.home + "|" + f.away + "|" + i))).replace(/[^a-zA-Z0-9]/g, "");
+        var isLive = f.status === "live";
+        var dateStr = f.date ? escapeHtml(f.date) : "";
+        var subParts = [escapeHtml(f.leagueName)];
+        if (dateStr) subParts.push(dateStr);
+        var sub = subParts.join(" · ");
+        var scoreColor = isLive ? "#ff6666" : "#ffcc00";
+
+        html += '<div class="fixture' + (isLive ? " live" : "") + '" onclick="openP(\\'' + escAttr(f.home) + '\\',\\'' + escAttr(f.away) + '\\',\\'' + uid + '\\')">';
+        html += '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">';
+        html += '<b style="flex:1;text-align:right;font-size:13px">' + escapeHtml(f.home) + '</b>';
+        html += '<span style="opacity:.5;font-size:12px">vs</span>';
+        html += '<b style="flex:1;font-size:13px">' + escapeHtml(f.away) + '</b>';
+        html += '<span style="color:' + scoreColor + ';min-width:70px;text-align:right;font-size:13px;font-weight:600;white-space:nowrap">' + escapeHtml(f.score) + '</span>';
+        html += '</div>';
+        html += '<small style="color:#8a96a8;display:block;margin-top:5px;font-size:11px">' + sub + '</small>';
+        html += '</div>';
+        html += '<div class="stats" id="stats-' + uid + '"></div>';
       });
-      html += `</div>`;
+      html += '</div>';
     }
   }
   return html;
 }
 
 function render() {
-  let html = "";
-  const liveGames = allGames.filter(g => g.status === "live");
-  const preGames  = allGames.filter(g => g.status === "pre");
+  var html = "";
+  var liveGames = allGames.filter(function(g) { return g.status === "live"; });
+  var preGames  = allGames.filter(function(g) { return g.status === "pre"; });
 
   if (showLiveOnly) {
     document.getElementById("count").textContent = "(" + liveGames.length + " live)";
     if (liveGames.length === 0) {
       html = "<div class='empty'>No live matches right now</div>";
     } else {
-      html = renderGroup(liveGames, "🔴 Live Now");
+      html = renderGroup(liveGames, "Live Now");
     }
   } else {
     document.getElementById("count").textContent = "(" + preGames.length + ")";
@@ -621,10 +636,10 @@ function render() {
       html = "<div class='empty'>No upcoming fixtures found</div>";
     } else {
       if (liveGames.length > 0) {
-        html += renderGroup(liveGames, "🔴 Live Now (" + liveGames.length + ")");
+        html += renderGroup(liveGames, "Live Now (" + liveGames.length + ")");
       }
       if (preGames.length > 0) {
-        html += renderGroup(preGames, "📅 Upcoming");
+        html += renderGroup(preGames, "Upcoming");
       }
     }
   }
@@ -634,25 +649,25 @@ function render() {
 }
 
 function openP(h, a, uid) {
-  const box = document.getElementById("stats-" + uid);
+  var box = document.getElementById("stats-" + uid);
   if (!box) return;
   box.classList.toggle("open");
   if (box.dataset.loaded) return;
-  box.innerHTML = "<div style='padding:12px;color:#8a96a8;font-size:13px'>Calculating L5…</div>";
+  box.innerHTML = "<div style='padding:12px;color:#8a96a8;font-size:13px'>Calculating L5...</div>";
   fetch("/api/prob?home=" + encodeURIComponent(h) + "&away=" + encodeURIComponent(a))
-    .then(r => r.json())
-    .then(j => {
+    .then(function(r) { return r.json(); })
+    .then(function(j) {
       box.innerHTML = j.html || "<div class='error'>Could not load probabilities</div>";
       box.dataset.loaded = "1";
     })
-    .catch(() => {
+    .catch(function() {
       box.innerHTML = "<div class='error'>Network error</div>";
     });
 }
 
 fetch("/api/games")
-  .then(r => r.json())
-  .then(data => {
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
     allGames = data.games || [];
     render();
     if (data.error && allGames.length === 0) {
@@ -660,7 +675,7 @@ fetch("/api/games")
       document.getElementById("loader").style.display = "block";
     }
   })
-  .catch(() => {
+  .catch(function() {
     document.getElementById("loader").innerHTML = "<div class='error'>Failed to load fixtures</div>";
   });
 </script>
