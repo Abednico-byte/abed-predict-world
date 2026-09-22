@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 Football Analysis – clean single-file Flask app
-- ESPN fixtures via site.web.api.espn.com
-- Simple L5 form model (real schedule when available + deterministic fallback)
-- In-memory cache
-- Fixed frontend
+- Home = pre-matches only
+- Separate Live section
+- Grouped by country → competition
+- ESPN via site.web.api.espn.com
+- L5 probability model + cache
 """
 
 import os
@@ -13,7 +14,6 @@ import requests
 import urllib.parse
 from flask import Flask, jsonify, request
 from datetime import datetime, timezone, timedelta
-from functools import lru_cache
 import time
 import threading
 
@@ -23,7 +23,6 @@ BOTSWANA_TZ = timezone(timedelta(hours=2))
 REQUEST_TIMEOUT = 10
 CACHE_TTL = 300  # 5 minutes
 
-# Simple thread-safe cache
 _cache = {}
 _cache_lock = threading.Lock()
 
@@ -47,7 +46,7 @@ HEADERS = {
 }
 
 # ---------------------------------------------------------------------------
-# Deterministic L5 fallback (hash of team name)
+# Deterministic L5 fallback
 # ---------------------------------------------------------------------------
 def hash_int(s: str) -> int:
     return int(hashlib.md5(s.encode("utf-8")).hexdigest()[:6], 16)
@@ -75,9 +74,6 @@ def last5_fallback(team: str) -> dict:
         "source": "fallback",
     }
 
-# ---------------------------------------------------------------------------
-# Probability model
-# ---------------------------------------------------------------------------
 def calc(home: str, away: str, hs=None, aw=None) -> dict:
     if hs is None:
         hs = last5_fallback(home)
@@ -112,19 +108,12 @@ def calc(home: str, away: str, hs=None, aw=None) -> dict:
     def over(l):
         return round(min(95, max(5, 50 + (eg - l) * 17)), 1)
 
-    o05 = over(0.5)
-    o15 = over(1.5)
-    o25 = over(2.5)
-    o35 = over(3.5)
-    o45 = over(4.5)
-
+    o05, o15, o25, o35, o45 = over(0.5), over(1.5), over(2.5), over(3.5), over(4.5)
     btts_yes = round(min(88, max(22, (hs["btts"] + aw["btts"]) / 2 * 100 * 0.85 + 10)), 1)
 
     return {
         "hp": hp, "dp": dp, "ap": ap,
-        "1x": round(hp + dp, 1),
-        "12": round(hp + ap, 1),
-        "x2": round(dp + ap, 1),
+        "1x": round(hp + dp, 1), "12": round(hp + ap, 1), "x2": round(dp + ap, 1),
         "o05": o05, "u05": round(100 - o05, 1),
         "o15": o15, "u15": round(100 - o15, 1),
         "o25": o25, "u25": round(100 - o25, 1),
@@ -133,31 +122,31 @@ def calc(home: str, away: str, hs=None, aw=None) -> dict:
         "bttsY": btts_yes, "bttsN": round(100 - btts_yes, 1),
         "hs": hs, "aw": aw,
         "expected_goals": round(eg, 2),
-        "model_note": "L5 form model (real schedule when available, otherwise deterministic fallback). Not for real-money betting.",
+        "model_note": "L5 form model (deterministic fallback). Not for real-money betting.",
     }
 
 # ---------------------------------------------------------------------------
-# Country / flag helper
+# Country / competition helpers
 # ---------------------------------------------------------------------------
 def classify_country(l: str):
     low = (l or "").lower()
-    if any(x in low for x in ["england", "premier league", "championship", "fa cup", "efl", "carabao"]):
+    if any(x in low for x in ["england", "premier league", "championship", "fa cup", "efl", "carabao", "league one", "league two"]):
         return "England", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
-    if any(x in low for x in ["knvb", "dutch", "eredivisie", "netherlands", "netherlands"]):
+    if any(x in low for x in ["netherlands", "eredivisie", "knvb", "dutch"]):
         return "Netherlands", "🇳🇱"
     if any(x in low for x in ["spain", "laliga", "la liga"]):
         return "Spain", "🇪🇸"
-    if any(x in low for x in ["bundes", "germany", "bundesliga"]):
+    if any(x in low for x in ["germany", "bundesliga", "bundes"]):
         return "Germany", "🇩🇪"
-    if any(x in low for x in ["serie", "italy"]):
+    if any(x in low for x in ["italy", "serie a", "serie b"]):
         return "Italy", "🇮🇹"
-    if any(x in low for x in ["ligue", "france"]):
+    if any(x in low for x in ["france", "ligue 1", "ligue 2"]):
         return "France", "🇫🇷"
     if any(x in low for x in ["portugal", "liga portugal"]):
         return "Portugal", "🇵🇹"
-    if any(x in low for x in ["belgium", "jupiler"]):
+    if any(x in low for x in ["belgium", "jupiler", "pro league"]):
         return "Belgium", "🇧🇪"
-    if any(x in low for x in ["turkey", "süper"]):
+    if any(x in low for x in ["turkey", "süper", "super lig"]):
         return "Turkey", "🇹🇷"
     if any(x in low for x in ["scotland", "scottish"]):
         return "Scotland", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
@@ -167,16 +156,23 @@ def classify_country(l: str):
         return "Sweden", "🇸🇪"
     if any(x in low for x in ["south africa", "premiership", "psl"]):
         return "South Africa", "🇿🇦"
-    if any(x in low for x in ["mls", "major league soccer", "usa"]):
+    if any(x in low for x in ["mls", "major league", "united states", "usa"]):
         return "USA", "🇺🇸"
-    if any(x in low for x in ["uefa", "champions", "europa", "conference"]):
+    if any(x in low for x in ["uefa", "champions league", "europa league", "conference league"]):
         return "Europe", "🇪🇺"
     if "women" in low:
         return "World Women", "🌍"
     return "World", "🌍"
 
+def clean_league_name(raw: str) -> str:
+    if not raw:
+        return "Football"
+    if "," in raw and len(raw) > 20:
+        return raw.split(",")[0].strip()
+    return raw.strip()
+
 # ---------------------------------------------------------------------------
-# ESPN fetch helpers
+# ESPN fetch
 # ---------------------------------------------------------------------------
 def get_json(url: str):
     try:
@@ -185,7 +181,6 @@ def get_json(url: str):
             return r.json()
     except Exception:
         pass
-    # Proxy fallback
     try:
         proxy_url = "https://api.allorigins.win/raw?url=" + urllib.parse.quote(url, safe="")
         r = requests.get(proxy_url, headers=HEADERS, timeout=12)
@@ -196,14 +191,40 @@ def get_json(url: str):
     return None
 
 LEAGUES = [
-    "eng.1", "eng.2", "eng.fa", "eng.league_cup",
-    "esp.1", "ger.1", "ita.1", "fra.1",
-    "ned.1", "ned.cup", "por.1", "bel.1",
-    "tur.1", "sco.1", "den.1", "swe.1",
-    "rsa.1", "usa.1",
-    "uefa.champions", "uefa.europa", "uefa.europa.conf",
-    "uefa.wchampions",
+    ("eng.1", "English Premier League"),
+    ("eng.2", "English Championship"),
+    ("eng.fa", "English FA Cup"),
+    ("eng.league_cup", "English Carabao Cup"),
+    ("esp.1", "Spanish LaLiga"),
+    ("ger.1", "German Bundesliga"),
+    ("ita.1", "Italian Serie A"),
+    ("fra.1", "French Ligue 1"),
+    ("ned.1", "Dutch Eredivisie"),
+    ("ned.cup", "Dutch KNVB Cup"),
+    ("por.1", "Portuguese Liga"),
+    ("bel.1", "Belgian Pro League"),
+    ("tur.1", "Turkish Super Lig"),
+    ("sco.1", "Scottish Premiership"),
+    ("den.1", "Danish Superliga"),
+    ("swe.1", "Swedish Allsvenskan"),
+    ("rsa.1", "South African Premiership"),
+    ("usa.1", "MLS"),
+    ("uefa.champions", "UEFA Champions League"),
+    ("uefa.europa", "UEFA Europa League"),
+    ("uefa.europa.conf", "UEFA Conference League"),
+    ("uefa.wchampions", "UEFA Women's Champions League"),
 ]
+
+def parse_status(st_type: dict) -> tuple:
+    """Return (category, short_score) where category is pre|live|post"""
+    state = (st_type.get("state") or "").lower()
+    short = st_type.get("shortDetail") or st_type.get("detail") or "TBD"
+    completed = st_type.get("completed", False)
+    if state == "in" or state == "live":
+        return "live", short
+    if state == "post" or completed:
+        return "post", short
+    return "pre", short
 
 def fetch_espn():
     cached = cache_get("games")
@@ -214,15 +235,20 @@ def fetch_espn():
     now = datetime.now(BOTSWANA_TZ)
     dates = [(now + timedelta(days=d)).strftime("%Y%m%d") for d in [0, -1, 1, 2]]
 
-    for date_str in dates:
-        if len(games) > 60:
-            break
+    # 1. League-specific calls (best league names)
+    for code, fallback_name in LEAGUES:
+        for date_str in dates:
+            data = get_json(
+                f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={date_str}"
+            )
+            if not data:
+                continue
+            lname = fallback_name
+            if data.get("leagues") and data["leagues"][0].get("name"):
+                lname = data["leagues"][0]["name"]
+            lname = clean_league_name(lname)
+            country, flag = classify_country(lname)
 
-        # Broad "all" call first (most reliable single request)
-        data = get_json(
-            f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={date_str}&limit=400"
-        )
-        if data:
             for ev in data.get("events", []):
                 comp = (ev.get("competitions") or [{}])[0]
                 cs = comp.get("competitors") or []
@@ -230,18 +256,16 @@ def fetch_espn():
                     continue
                 home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
                 away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
-                lname = (
-                    (data.get("leagues") or [{}])[0].get("name")
-                    if data.get("leagues")
-                    else None
-                ) or ev.get("shortName") or "Football"
-                # Prefer competition name when available
-                if comp.get("competitors"):
-                    league_info = (data.get("leagues") or [{}])[0]
-                    if league_info.get("name"):
-                        lname = league_info["name"]
-                country, flag = classify_country(lname)
-                st = (comp.get("status", {}).get("type", {}) or {})
+                st_type = (comp.get("status") or {}).get("type") or {}
+                cat, score = parse_status(st_type)
+
+                note = comp.get("altGameNote") or ""
+                if note and len(note) > 5:
+                    possible = clean_league_name(note)
+                    if len(possible) > 8:
+                        lname = possible
+                        country, flag = classify_country(lname)
+
                 games.append({
                     "league": lname,
                     "leagueName": lname,
@@ -249,42 +273,52 @@ def fetch_espn():
                     "flag": flag,
                     "home": (home.get("team", {}).get("displayName") or "Home")[:40],
                     "away": (away.get("team", {}).get("displayName") or "Away")[:40],
-                    "score": st.get("shortDetail") or "TBD",
-                    "live": st.get("state") == "in",
-                    "status": st.get("description") or "",
+                    "score": score,
+                    "live": cat == "live",
+                    "status": cat,
+                    "statusDetail": st_type.get("description") or score,
                 })
 
-        # League-specific for better coverage when "all" is sparse
-        if len(games) < 20:
-            for code in LEAGUES:
-                if len(games) > 60:
-                    break
-                data = get_json(
-                    f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={date_str}"
-                )
-                if not data:
-                    continue
-                lname = (data.get("leagues") or [{}])[0].get("name") if data.get("leagues") else code
-                for ev in data.get("events", [])[:8]:
-                    comp = (ev.get("competitions") or [{}])[0]
-                    cs = comp.get("competitors") or []
-                    if len(cs) < 2:
-                        continue
-                    home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
-                    away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
-                    country, flag = classify_country(lname)
-                    st = (comp.get("status", {}).get("type", {}) or {})
-                    games.append({
-                        "league": lname,
-                        "leagueName": lname,
-                        "country": country,
-                        "flag": flag,
-                        "home": (home.get("team", {}).get("displayName") or "Home")[:40],
-                        "away": (away.get("team", {}).get("displayName") or "Away")[:40],
-                        "score": st.get("shortDetail") or "TBD",
-                        "live": st.get("state") == "in",
-                        "status": st.get("description") or "",
-                    })
+    # 2. Broad "all" as safety net
+    for date_str in dates:
+        data = get_json(
+            f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={date_str}&limit=400"
+        )
+        if not data:
+            continue
+        for ev in data.get("events", []):
+            comp = (ev.get("competitions") or [{}])[0]
+            cs = comp.get("competitors") or []
+            if len(cs) < 2:
+                continue
+            home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
+            away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
+            st_type = (comp.get("status") or {}).get("type") or {}
+            cat, score = parse_status(st_type)
+
+            lname = None
+            note = comp.get("altGameNote") or ""
+            if note:
+                lname = clean_league_name(note)
+            if not lname and data.get("leagues") and data["leagues"][0].get("name"):
+                lname = data["leagues"][0]["name"]
+            if not lname:
+                lname = "Football"
+            lname = clean_league_name(lname)
+            country, flag = classify_country(lname)
+
+            games.append({
+                "league": lname,
+                "leagueName": lname,
+                "country": country,
+                "flag": flag,
+                "home": (home.get("team", {}).get("displayName") or "Home")[:40],
+                "away": (away.get("team", {}).get("displayName") or "Away")[:40],
+                "score": score,
+                "live": cat == "live",
+                "status": cat,
+                "statusDetail": st_type.get("description") or score,
+            })
 
     # Deduplicate
     seen = set()
@@ -295,7 +329,7 @@ def fetch_espn():
             seen.add(k)
             out.append(g)
 
-    print(f"Final games: {len(out)}")
+    print(f"Final games: {len(out)}  (pre={sum(1 for g in out if g['status']=='pre')} live={sum(1 for g in out if g['status']=='live')} post={sum(1 for g in out if g['status']=='post')})")
     cache_set("games", out)
     return out
 
@@ -315,6 +349,9 @@ def api_games():
         "error": None,
         "date": datetime.now(BOTSWANA_TZ).strftime("%Y-%m-%d"),
         "count": len(games),
+        "pre": sum(1 for g in games if g["status"] == "pre"),
+        "live": sum(1 for g in games if g["status"] == "live"),
+        "post": sum(1 for g in games if g["status"] == "post"),
     })
 
 @app.route("/api/prob")
@@ -324,8 +361,6 @@ def api_prob():
     if not home or not away:
         return jsonify({"error": "Both home and away teams are required."}), 400
 
-    # For now we use the deterministic model.
-    # Real L5 would require team-ID mapping per league (can be added later).
     p = calc(home, away)
 
     html = f"""
@@ -380,24 +415,26 @@ def home():
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Football Analysis</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; background: #1c2333; color: #fff; font-family: system-ui, -apple-system, Arial, sans-serif; }
-    .top { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: #1c2333; position: sticky; top: 0; z-index: 20; border-bottom: 1px solid #2a3447; }
-    .live-btn { background: #2a3447; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; user-select: none; }
-    .live-btn.active { background: #ff4444; color: #fff; }
-    .country-head { padding: 14px 16px; font-weight: 600; background: #0f141f; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid #242f44; }
+    body { margin: 0; background: #0f141f; color: #fff; font-family: system-ui, -apple-system, Arial, sans-serif; }
+    .top { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: #1c2333; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid #2a3447; }
+    .top h3 { margin: 0; font-size: 17px; }
+    .live-btn { background: #2a3447; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; user-select: none; border: 1px solid #3a4557; }
+    .live-btn.active { background: #ff4444; color: #fff; border-color: #ff4444; }
+    .section-head { padding: 12px 16px 6px; font-size: 13px; font-weight: 700; color: #8a96a8; text-transform: uppercase; letter-spacing: .4px; }
+    .country-head { padding: 13px 16px; font-weight: 600; background: #1c2333; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #242f44; }
     .league-tabs { display: flex; gap: 8px; padding: 10px 12px; overflow-x: auto; background: #121a2a; white-space: nowrap; scrollbar-width: none; }
     .league-tabs::-webkit-scrollbar { display: none; }
     .ltab { padding: 6px 14px; background: #1a2535; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #2a3447; flex-shrink: 0; }
     .ltab.active { background: #00ff88; color: #000; font-weight: 700; }
-    .fixtures-wrap { background: #121a2a; padding-bottom: 8px; }
-    .fixture { background: #242f44; margin: 8px 12px; padding: 14px; border-radius: 12px; cursor: pointer; border-left: 3px solid #00ff88; transition: background .15s; }
-    .fixture:hover { background: #2c3a55; }
+    .fixtures-wrap { background: #121a2a; padding-bottom: 6px; }
+    .fixture { background: #242f44; margin: 8px 12px; padding: 13px 14px; border-radius: 12px; cursor: pointer; border-left: 3px solid #00ff88; }
     .fixture.live { border-left-color: #ff4444; }
-    .stats { display: none; background: #0f141f; margin: 0 12px 12px; padding: 8px; border-radius: 12px; }
+    .fixture:active { background: #2c3a55; }
+    .stats { display: none; background: #0f141f; margin: 0 12px 10px; padding: 6px; border-radius: 12px; }
     .stats.open { display: block; }
     .card { background: #242f44; margin: 10px 0; padding: 14px; border-radius: 12px; }
     .chead { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 12px; font-size: 13px; }
@@ -411,19 +448,21 @@ def home():
     .grow { display: flex; align-items: center; justify-content: space-between; margin: 7px 0; font-size: 12px; }
     .note { background: #3b2d10; color: #ffd56a; padding: 10px 12px; border-radius: 10px; font-size: 11px; margin-top: 10px; }
     .error { margin: 16px; padding: 16px; background: #3b1820; border-radius: 10px; color: #ff9ba8; }
-    .bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #1c2333; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #2a3447; font-size: 13px; z-index: 30; }
+    .empty { padding: 30px 20px; text-align: center; color: #8a96a8; font-size: 14px; }
+    .bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #1c2333; display: flex; justify-content: space-around; padding: 11px 0; border-top: 1px solid #2a3447; font-size: 12px; z-index: 40; }
+    .bottom div { opacity: .7; }
     #loader { padding: 40px 20px; text-align: center; color: #8a96a8; }
   </style>
 </head>
 <body>
   <div class="top">
-    <h3 style="margin:0;font-size:18px">Today <span id="count" style="color:#00ff88;font-weight:400"></span></h3>
-    <div class="live-btn" id="liveBtn" onclick="showLive()">● LIVE</div>
+    <h3>Today <span id="count" style="color:#00ff88;font-weight:400"></span></h3>
+    <div class="live-btn" id="liveBtn" onclick="toggleLive()">● LIVE</div>
   </div>
 
   <div id="loader">Loading ESPN fixtures…</div>
   <div id="list"></div>
-  <div style="height:80px"></div>
+  <div style="height:72px"></div>
 
   <div class="bottom">
     <div>🗓️ Fixtures</div>
@@ -434,18 +473,18 @@ def home():
 
 <script>
 let allGames = [];
-let view = "fixtures";
+let showLiveOnly = false;
 let openC = {};
 let selL = {};
 
-function showLive() {
-  view = view === "live" ? "fixtures" : "live";
-  document.getElementById("liveBtn").classList.toggle("active", view === "live");
+function toggleLive() {
+  showLiveOnly = !showLiveOnly;
+  document.getElementById("liveBtn").classList.toggle("active", showLiveOnly);
   render();
 }
 
 function toggleC(k) {
-  openC[k] = !openC[k];
+  openC[k] = !(openC[k] !== false);
   render();
 }
 
@@ -463,63 +502,96 @@ function escapeHtml(v) {
     .replaceAll("'", "&#039;");
 }
 
-function render() {
+function renderGroup(games, sectionTitle) {
+  if (!games.length) return "";
   let html = "";
-  const filt = view === "live" ? allGames.filter(g => g.live) : allGames;
-  const by = {};
-
-  filt.forEach(g => {
-    const k = g.flag + "|" + g.country;
-    if (!by[k]) by[k] = [];
-    by[k].push(g);
-  });
-
-  document.getElementById("count").textContent = "(" + filt.length + ")";
-
-  if (filt.length === 0) {
-    html = "<div class='error'>No fixtures were returned. Check the server log and ESPN connection.</div>";
+  if (sectionTitle) {
+    html += `<div class="section-head">${sectionTitle}</div>`;
   }
 
-  for (const ck in by) {
-    const games = by[ck];
+  const byCountry = {};
+  games.forEach(g => {
+    const k = g.flag + "|" + g.country;
+    if (!byCountry[k]) byCountry[k] = [];
+    byCountry[k].push(g);
+  });
+
+  const keys = Object.keys(byCountry).sort((a, b) => {
+    const ca = a.split("|")[1], cb = b.split("|")[1];
+    if (ca === "Europe") return -1;
+    if (cb === "Europe") return 1;
+    return ca.localeCompare(cb);
+  });
+
+  for (const ck of keys) {
+    const countryGames = byCountry[ck];
     const parts = ck.split("|");
     const flag = parts[0];
     const country = parts[1];
     const isOpen = openC[ck] !== false;
-    const leagues = [...new Set(games.map(x => x.leagueName))];
+    const leagues = [...new Set(countryGames.map(x => x.leagueName))];
     if (!selL[ck]) selL[ck] = leagues[0];
     const sel = selL[ck];
-    const liveC = games.filter(x => x.live).length;
+    const liveC = countryGames.filter(x => x.live).length;
 
     html += `<div class="country-head" onclick="toggleC('${ck.replace(/'/g, "\\\\'")}')">
-      <span>${flag} ${escapeHtml(country)} (${games.length}) ${liveC > 0 ? "🔴" + liveC : ""}</span>
-      <span>${isOpen ? "▼" : "▶"}</span>
+      <span>${flag} ${escapeHtml(country)} (${countryGames.length})${liveC > 0 ? ' <span style="color:#ff4444">🔴' + liveC + '</span>' : ''}</span>
+      <span style="opacity:.6">${isOpen ? "▼" : "▶"}</span>
     </div>`;
 
     if (isOpen) {
       html += `<div class="league-tabs">`;
       leagues.forEach(l => {
-        const c = games.filter(x => x.leagueName === l).length;
+        const c = countryGames.filter(x => x.leagueName === l).length;
         const act = l === sel ? "active" : "";
-        html += `<div class="ltab ${act}" onclick="event.stopPropagation();selectL('${ck.replace(/'/g, "\\\\'")}','${l.replace(/'/g, "\\\\'")}')">${escapeHtml(l)} (${c})</div>`;
+        html += `<div class="ltab ${act}" onclick="event.stopPropagation();selectL('${ck.replace(/'/g, "\\\\'")}','${String(l).replace(/'/g, "\\\\'")}')">${escapeHtml(l)} (${c})</div>`;
       });
       html += `</div><div class="fixtures-wrap">`;
 
-      games.filter(x => x.leagueName === sel).forEach((f, i) => {
+      countryGames.filter(x => x.leagueName === sel).forEach((f, i) => {
         const uid = btoa(unescape(encodeURIComponent(ck + "|" + f.home + "|" + f.away + "|" + i))).replace(/[^a-zA-Z0-9]/g, "");
+        const isLive = f.status === "live";
         html += `
-          <div class="fixture ${f.live ? "live" : ""}" onclick="openP('${escapeHtml(f.home).replace(/'/g, "\\\\'")}','${escapeHtml(f.away).replace(/'/g, "\\\\'")}','${uid}')">
+          <div class="fixture ${isLive ? "live" : ""}" onclick="openP('${escapeHtml(f.home).replace(/'/g, "\\\\'")}','${escapeHtml(f.away).replace(/'/g, "\\\\'")}','${uid}')">
             <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-              <b style="flex:1;text-align:right">${escapeHtml(f.home)}</b>
-              <span style="opacity:.6">vs</span>
-              <b style="flex:1">${escapeHtml(f.away)}</b>
-              <span style="color:#ffcc00;min-width:48px;text-align:right">${escapeHtml(f.score)}</span>
+              <b style="flex:1;text-align:right;font-size:13px">${escapeHtml(f.home)}</b>
+              <span style="opacity:.5;font-size:12px">vs</span>
+              <b style="flex:1;font-size:13px">${escapeHtml(f.away)}</b>
+              <span style="color:${isLive ? "#ff6666" : "#ffcc00"};min-width:52px;text-align:right;font-size:13px;font-weight:600">${escapeHtml(f.score)}</span>
             </div>
-            <small style="color:#8a96a8;display:block;margin-top:4px">${escapeHtml(f.leagueName)}</small>
+            <small style="color:#8a96a8;display:block;margin-top:5px;font-size:11px">${escapeHtml(f.leagueName)}</small>
           </div>
           <div class="stats" id="stats-${uid}"></div>`;
       });
       html += `</div>`;
+    }
+  }
+  return html;
+}
+
+function render() {
+  let html = "";
+  const liveGames = allGames.filter(g => g.status === "live");
+  const preGames  = allGames.filter(g => g.status === "pre");
+
+  if (showLiveOnly) {
+    document.getElementById("count").textContent = "(" + liveGames.length + " live)";
+    if (liveGames.length === 0) {
+      html = "<div class='empty'>No live matches right now</div>";
+    } else {
+      html = renderGroup(liveGames, "🔴 Live Now");
+    }
+  } else {
+    document.getElementById("count").textContent = "(" + preGames.length + ")";
+    if (preGames.length === 0 && liveGames.length === 0) {
+      html = "<div class='empty'>No upcoming fixtures found</div>";
+    } else {
+      if (liveGames.length > 0) {
+        html += renderGroup(liveGames, "🔴 Live Now (" + liveGames.length + ")");
+      }
+      if (preGames.length > 0) {
+        html += renderGroup(preGames, "📅 Upcoming");
+      }
     }
   }
 
@@ -532,7 +604,7 @@ function openP(h, a, uid) {
   if (!box) return;
   box.classList.toggle("open");
   if (box.dataset.loaded) return;
-  box.innerHTML = "<div style='padding:12px;color:#8a96a8'>Calculating L5…</div>";
+  box.innerHTML = "<div style='padding:12px;color:#8a96a8;font-size:13px'>Calculating L5…</div>";
   fetch("/api/prob?home=" + encodeURIComponent(h) + "&away=" + encodeURIComponent(a))
     .then(r => r.json())
     .then(j => {
@@ -554,7 +626,7 @@ fetch("/api/games")
       document.getElementById("loader").style.display = "block";
     }
   })
-  .catch(err => {
+  .catch(() => {
     document.getElementById("loader").innerHTML = "<div class='error'>Failed to load fixtures</div>";
   });
 </script>
