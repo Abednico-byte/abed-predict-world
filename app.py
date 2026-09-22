@@ -6,6 +6,7 @@ Football Analysis – clean single-file Flask app
 - Grouped by country → competition
 - ESPN via site.web.api.espn.com
 - L5 probability model + cache
+- Shows country, date, and live score (e.g. 1-0  70')
 """
 
 import os
@@ -130,8 +131,10 @@ def calc(home: str, away: str, hs=None, aw=None) -> dict:
 # ---------------------------------------------------------------------------
 def classify_country(l: str):
     low = (l or "").lower()
-    if any(x in low for x in ["england", "premier league", "championship", "fa cup", "efl", "carabao", "league one", "league two"]):
+    if any(x in low for x in ["england", "premier league", "championship", "fa cup", "efl", "carabao", "league one", "league two", "national league"]):
         return "England", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
+    if any(x in low for x in ["scotland", "scottish", "spfl", "premiership", "challenge cup"]):
+        return "Scotland", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
     if any(x in low for x in ["netherlands", "eredivisie", "knvb", "dutch"]):
         return "Netherlands", "🇳🇱"
     if any(x in low for x in ["spain", "laliga", "la liga"]):
@@ -148,15 +151,13 @@ def classify_country(l: str):
         return "Belgium", "🇧🇪"
     if any(x in low for x in ["turkey", "süper", "super lig"]):
         return "Turkey", "🇹🇷"
-    if any(x in low for x in ["scotland", "scottish"]):
-        return "Scotland", "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
     if any(x in low for x in ["denmark", "superliga"]):
         return "Denmark", "🇩🇰"
     if any(x in low for x in ["sweden", "allsvenskan"]):
         return "Sweden", "🇸🇪"
-    if any(x in low for x in ["south africa", "premiership", "psl"]):
+    if any(x in low for x in ["south africa", "psl", "dstv"]):
         return "South Africa", "🇿🇦"
-    if any(x in low for x in ["mls", "major league", "united states", "usa"]):
+    if any(x in low for x in ["mls", "major league soccer", "usl", "ncaam", "ncaa", "united states", "usa"]):
         return "USA", "🇺🇸"
     if any(x in low for x in ["uefa", "champions league", "europa league", "conference league"]):
         return "Europe", "🇪🇺"
@@ -215,15 +216,20 @@ LEAGUES = [
     ("uefa.wchampions", "UEFA Women's Champions League"),
 ]
 
-def parse_status(st_type: dict) -> tuple:
-    """Return (category, short_score) where category is pre|live|post"""
+def parse_status(st_type: dict, home_score, away_score) -> tuple:
+    """Return (category, display_score) where category is pre|live|post.
+    display_score examples: '1-0  70''  |  '2-1 FT'  |  '20:00' / 'TBD'
+    """
     state = (st_type.get("state") or "").lower()
     short = st_type.get("shortDetail") or st_type.get("detail") or "TBD"
     completed = st_type.get("completed", False)
+    hs = str(home_score) if home_score is not None and str(home_score) != "" else "0"
+    aws = str(away_score) if away_score is not None and str(away_score) != "" else "0"
+
     if state == "in" or state == "live":
-        return "live", short
+        return "live", f"{hs}-{aws}  {short}"
     if state == "post" or completed:
-        return "post", short
+        return "post", f"{hs}-{aws}  FT"
     return "pre", short
 
 def fetch_espn():
@@ -257,26 +263,40 @@ def fetch_espn():
                 home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
                 away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
                 st_type = (comp.get("status") or {}).get("type") or {}
-                cat, score = parse_status(st_type)
+                cat, score = parse_status(st_type, home.get("score"), away.get("score"))
+
+                raw_date = comp.get("date") or ev.get("date") or ""
+                match_date = ""
+                if raw_date:
+                    try:
+                        dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).astimezone(BOTSWANA_TZ)
+                        match_date = dt.strftime("%d %b")
+                    except Exception:
+                        match_date = raw_date[:10]
 
                 note = comp.get("altGameNote") or ""
+                this_lname = lname
+                this_country, this_flag = country, flag
                 if note and len(note) > 5:
                     possible = clean_league_name(note)
                     if len(possible) > 8:
-                        lname = possible
-                        country, flag = classify_country(lname)
+                        this_lname = possible
+                        this_country, this_flag = classify_country(this_lname)
 
                 games.append({
-                    "league": lname,
-                    "leagueName": lname,
-                    "country": country,
-                    "flag": flag,
+                    "league": this_lname,
+                    "leagueName": this_lname,
+                    "country": this_country,
+                    "flag": this_flag,
                     "home": (home.get("team", {}).get("displayName") or "Home")[:40],
                     "away": (away.get("team", {}).get("displayName") or "Away")[:40],
                     "score": score,
                     "live": cat == "live",
                     "status": cat,
                     "statusDetail": st_type.get("description") or score,
+                    "date": match_date,
+                    "homeScore": home.get("score"),
+                    "awayScore": away.get("score"),
                 })
 
     # 2. Broad "all" as safety net
@@ -294,30 +314,42 @@ def fetch_espn():
             home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
             away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
             st_type = (comp.get("status") or {}).get("type") or {}
-            cat, score = parse_status(st_type)
+            cat, score = parse_status(st_type, home.get("score"), away.get("score"))
 
-            lname = None
+            raw_date = comp.get("date") or ev.get("date") or ""
+            match_date = ""
+            if raw_date:
+                try:
+                    dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).astimezone(BOTSWANA_TZ)
+                    match_date = dt.strftime("%d %b")
+                except Exception:
+                    match_date = raw_date[:10]
+
+            this_lname = None
             note = comp.get("altGameNote") or ""
             if note:
-                lname = clean_league_name(note)
-            if not lname and data.get("leagues") and data["leagues"][0].get("name"):
-                lname = data["leagues"][0]["name"]
-            if not lname:
-                lname = "Football"
-            lname = clean_league_name(lname)
-            country, flag = classify_country(lname)
+                this_lname = clean_league_name(note)
+            if not this_lname and data.get("leagues") and data["leagues"][0].get("name"):
+                this_lname = data["leagues"][0]["name"]
+            if not this_lname:
+                this_lname = "Football"
+            this_lname = clean_league_name(this_lname)
+            this_country, this_flag = classify_country(this_lname)
 
             games.append({
-                "league": lname,
-                "leagueName": lname,
-                "country": country,
-                "flag": flag,
+                "league": this_lname,
+                "leagueName": this_lname,
+                "country": this_country,
+                "flag": this_flag,
                 "home": (home.get("team", {}).get("displayName") or "Home")[:40],
                 "away": (away.get("team", {}).get("displayName") or "Away")[:40],
                 "score": score,
                 "live": cat == "live",
                 "status": cat,
                 "statusDetail": st_type.get("description") or score,
+                "date": match_date,
+                "homeScore": home.get("score"),
+                "awayScore": away.get("score"),
             })
 
     # Deduplicate
@@ -535,7 +567,7 @@ function renderGroup(games, sectionTitle) {
     const liveC = countryGames.filter(x => x.live).length;
 
     html += `<div class="country-head" onclick="toggleC('${ck.replace(/'/g, "\\\\'")}')">
-      <span>${flag} ${escapeHtml(country)} (${countryGames.length})${liveC > 0 ? ' <span style="color:#ff4444">🔴' + liveC + '</span>' : ''}</span>
+      <span>${flag} \( {escapeHtml(country)} ( \){countryGames.length})${liveC > 0 ? ' <span style="color:#ff4444">🔴' + liveC + '</span>' : ''}</span>
       <span style="opacity:.6">${isOpen ? "▼" : "▶"}</span>
     </div>`;
 
@@ -544,22 +576,24 @@ function renderGroup(games, sectionTitle) {
       leagues.forEach(l => {
         const c = countryGames.filter(x => x.leagueName === l).length;
         const act = l === sel ? "active" : "";
-        html += `<div class="ltab ${act}" onclick="event.stopPropagation();selectL('${ck.replace(/'/g, "\\\\'")}','${String(l).replace(/'/g, "\\\\'")}')">${escapeHtml(l)} (${c})</div>`;
+        html += `<div class="ltab \( {act}" onclick="event.stopPropagation();selectL(' \){ck.replace(/'/g, "\\\\'")}','\( {String(l).replace(/'/g, "\\\\'")}')"> \){escapeHtml(l)} (${c})</div>`;
       });
       html += `</div><div class="fixtures-wrap">`;
 
       countryGames.filter(x => x.leagueName === sel).forEach((f, i) => {
         const uid = btoa(unescape(encodeURIComponent(ck + "|" + f.home + "|" + f.away + "|" + i))).replace(/[^a-zA-Z0-9]/g, "");
         const isLive = f.status === "live";
+        const dateStr = f.date ? escapeHtml(f.date) : "";
+        const sub = [escapeHtml(f.leagueName), dateStr].filter(Boolean).join(" · ");
         html += `
-          <div class="fixture ${isLive ? "live" : ""}" onclick="openP('${escapeHtml(f.home).replace(/'/g, "\\\\'")}','${escapeHtml(f.away).replace(/'/g, "\\\\'")}','${uid}')">
+          <div class="fixture \( {isLive ? "live" : ""}" onclick="openP(' \){escapeHtml(f.home).replace(/'/g, "\\\\'")}','\( {escapeHtml(f.away).replace(/'/g, "\\\\'")}',' \){uid}')">
             <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
               <b style="flex:1;text-align:right;font-size:13px">${escapeHtml(f.home)}</b>
               <span style="opacity:.5;font-size:12px">vs</span>
               <b style="flex:1;font-size:13px">${escapeHtml(f.away)}</b>
-              <span style="color:${isLive ? "#ff6666" : "#ffcc00"};min-width:52px;text-align:right;font-size:13px;font-weight:600">${escapeHtml(f.score)}</span>
+              <span style="color:\( {isLive ? "#ff6666" : "#ffcc00"};min-width:70px;text-align:right;font-size:13px;font-weight:600;white-space:nowrap"> \){escapeHtml(f.score)}</span>
             </div>
-            <small style="color:#8a96a8;display:block;margin-top:5px;font-size:11px">${escapeHtml(f.leagueName)}</small>
+            <small style="color:#8a96a8;display:block;margin-top:5px;font-size:11px">${sub}</small>
           </div>
           <div class="stats" id="stats-${uid}"></div>`;
       });
