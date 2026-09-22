@@ -20,8 +20,8 @@ import threading
 app = Flask(__name__)
 
 BOTSWANA_TZ = timezone(timedelta(hours=2))
-REQUEST_TIMEOUT = 10
-CACHE_TTL = 300  # 5 minutes
+REQUEST_TIMEOUT = 6
+CACHE_TTL = 180  # 3 minutes
 
 _cache = {}
 _cache_lock = threading.Lock()
@@ -474,7 +474,7 @@ def clean_league_name(raw: str) -> str:
     return raw.strip()
 
 # ---------------------------------------------------------------------------
-# ESPN fetch
+# ESPN fetch (fast — few parallel calls so Render does not time out)
 # ---------------------------------------------------------------------------
 def get_json(url: str):
     try:
@@ -483,44 +483,10 @@ def get_json(url: str):
             return r.json()
     except Exception:
         pass
-    try:
-        proxy_url = "https://api.allorigins.win/raw?url=" + urllib.parse.quote(url, safe="")
-        r = requests.get(proxy_url, headers=HEADERS, timeout=12)
-        if r.status_code == 200:
-            return r.json()
-    except Exception:
-        pass
     return None
 
-LEAGUES = [
-    ("eng.1", "English Premier League"),
-    ("eng.2", "English Championship"),
-    ("eng.fa", "English FA Cup"),
-    ("eng.league_cup", "English Carabao Cup"),
-    ("esp.1", "Spanish LaLiga"),
-    ("ger.1", "German Bundesliga"),
-    ("ita.1", "Italian Serie A"),
-    ("fra.1", "French Ligue 1"),
-    ("ned.1", "Dutch Eredivisie"),
-    ("ned.cup", "Dutch KNVB Cup"),
-    ("por.1", "Portuguese Liga"),
-    ("bel.1", "Belgian Pro League"),
-    ("tur.1", "Turkish Super Lig"),
-    ("sco.1", "Scottish Premiership"),
-    ("den.1", "Danish Superliga"),
-    ("swe.1", "Swedish Allsvenskan"),
-    ("rsa.1", "South African Premiership"),
-    ("usa.1", "MLS"),
-    ("uefa.champions", "UEFA Champions League"),
-    ("uefa.europa", "UEFA Europa League"),
-    ("uefa.europa.conf", "UEFA Conference League"),
-    ("uefa.wchampions", "UEFA Women's Champions League"),
-]
-
 def parse_status(st_type: dict, home_score, away_score) -> tuple:
-    """Return (category, display_score) where category is pre|live|post.
-    display_score examples: '1-0  70''  |  '2-1 FT'  |  '20:00' / 'TBD'
-    """
+    """Return (category, display_score) where category is pre|live|post."""
     state = (st_type.get("state") or "").lower()
     short = st_type.get("shortDetail") or st_type.get("detail") or "TBD"
     completed = st_type.get("completed", False)
@@ -528,133 +494,120 @@ def parse_status(st_type: dict, home_score, away_score) -> tuple:
     aws = str(away_score) if away_score is not None and str(away_score) != "" else "0"
 
     if state == "in" or state == "live":
-        # Live: show score + minute
         return "live", f"{hs}-{aws}  {short}"
     if state == "post" or completed:
         return "post", f"{hs}-{aws}  FT"
-    # Pre-match: keep kickoff time / TBD
     return "pre", short
+
+def _parse_events(data, fallback_lname=None) -> list:
+    games = []
+    if not data:
+        return games
+    default_lname = fallback_lname
+    if data.get("leagues") and data["leagues"][0].get("name"):
+        default_lname = data["leagues"][0]["name"]
+    default_lname = clean_league_name(default_lname or "Football")
+    default_country, default_flag = classify_country(default_lname)
+
+    for ev in data.get("events", []):
+        comp = (ev.get("competitions") or [{}])[0]
+        cs = comp.get("competitors") or []
+        if len(cs) < 2:
+            continue
+        home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
+        away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
+        st_type = (comp.get("status") or {}).get("type") or {}
+        cat, score = parse_status(st_type, home.get("score"), away.get("score"))
+
+        raw_date = comp.get("date") or ev.get("date") or ""
+        match_date = ""
+        if raw_date:
+            try:
+                dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).astimezone(BOTSWANA_TZ)
+                match_date = dt.strftime("%d %b")
+            except Exception:
+                match_date = raw_date[:10]
+
+        this_lname = default_lname
+        this_country, this_flag = default_country, default_flag
+        note = comp.get("altGameNote") or ""
+        if note and len(note) > 5:
+            possible = clean_league_name(note)
+            if len(possible) > 5:
+                this_lname = possible
+                this_country, this_flag = classify_country(this_lname)
+        # Also try league from event
+        if this_lname in ("Football", "Soccer") and ev.get("league"):
+            ln = clean_league_name(ev["league"].get("name") or ev["league"].get("abbreviation") or "")
+            if ln:
+                this_lname = ln
+                this_country, this_flag = classify_country(this_lname)
+
+        games.append({
+            "league": this_lname,
+            "leagueName": this_lname,
+            "country": this_country,
+            "flag": this_flag,
+            "home": (home.get("team", {}).get("displayName") or "Home")[:40],
+            "away": (away.get("team", {}).get("displayName") or "Away")[:40],
+            "score": score,
+            "live": cat == "live",
+            "status": cat,
+            "statusDetail": st_type.get("description") or score,
+            "date": match_date,
+            "homeScore": home.get("score"),
+            "awayScore": away.get("score"),
+        })
+    return games
 
 def fetch_espn():
     cached = cache_get("games")
     if cached is not None:
         return cached
 
-    games = []
     now = datetime.now(BOTSWANA_TZ)
-    dates = [(now + timedelta(days=d)).strftime("%Y%m%d") for d in [0, -1, 1, 2]]
+    # Only today + tomorrow (2 dates) — keeps total under Render timeout
+    dates = [(now + timedelta(days=d)).strftime("%Y%m%d") for d in [0, 1]]
 
-    # 1. League-specific calls (best league names)
-    for code, fallback_name in LEAGUES:
-        for date_str in dates:
-            data = get_json(
-                f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={date_str}"
-            )
-            if not data:
-                continue
-            lname = fallback_name
-            if data.get("leagues") and data["leagues"][0].get("name"):
-                lname = data["leagues"][0]["name"]
-            lname = clean_league_name(lname)
-            country, flag = classify_country(lname)
-
-            for ev in data.get("events", []):
-                comp = (ev.get("competitions") or [{}])[0]
-                cs = comp.get("competitors") or []
-                if len(cs) < 2:
-                    continue
-                home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
-                away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
-                st_type = (comp.get("status") or {}).get("type") or {}
-                cat, score = parse_status(st_type, home.get("score"), away.get("score"))
-
-                # Match date (local-friendly)
-                raw_date = comp.get("date") or ev.get("date") or ""
-                match_date = ""
-                if raw_date:
-                    try:
-                        dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).astimezone(BOTSWANA_TZ)
-                        match_date = dt.strftime("%d %b")
-                    except Exception:
-                        match_date = raw_date[:10]
-
-                note = comp.get("altGameNote") or ""
-                this_lname = lname
-                this_country, this_flag = country, flag
-                if note and len(note) > 5:
-                    possible = clean_league_name(note)
-                    if len(possible) > 8:
-                        this_lname = possible
-                        this_country, this_flag = classify_country(this_lname)
-
-                games.append({
-                    "league": this_lname,
-                    "leagueName": this_lname,
-                    "country": this_country,
-                    "flag": this_flag,
-                    "home": (home.get("team", {}).get("displayName") or "Home")[:40],
-                    "away": (away.get("team", {}).get("displayName") or "Away")[:40],
-                    "score": score,
-                    "live": cat == "live",
-                    "status": cat,
-                    "statusDetail": st_type.get("description") or score,
-                    "date": match_date,
-                    "homeScore": home.get("score"),
-                    "awayScore": away.get("score"),
-                })
-
-    # 2. Broad "all" as safety net
-    for date_str in dates:
-        data = get_json(
-            f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={date_str}&limit=400"
+    urls = [
+        f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={d}&limit=350"
+        for d in dates
+    ]
+    # A few high-value leagues for cleaner names (parallel)
+    priority = [
+        ("eng.1", "English Premier League"),
+        ("eng.fa", "English FA Cup"),
+        ("esp.1", "Spanish LaLiga"),
+        ("uefa.champions", "UEFA Champions League"),
+        ("uefa.europa", "UEFA Europa League"),
+        ("sco.1", "Scottish Premiership"),
+        ("usa.1", "MLS"),
+        ("rsa.1", "South African Premiership"),
+    ]
+    for code, name in priority:
+        urls.append(
+            f"https://site.web.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={dates[0]}"
         )
-        if not data:
-            continue
-        for ev in data.get("events", []):
-            comp = (ev.get("competitions") or [{}])[0]
-            cs = comp.get("competitors") or []
-            if len(cs) < 2:
-                continue
-            home = next((x for x in cs if x.get("homeAway") == "home"), cs[0])
-            away = next((x for x in cs if x.get("homeAway") == "away"), cs[1])
-            st_type = (comp.get("status") or {}).get("type") or {}
-            cat, score = parse_status(st_type, home.get("score"), away.get("score"))
 
-            raw_date = comp.get("date") or ev.get("date") or ""
-            match_date = ""
-            if raw_date:
-                try:
-                    dt = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).astimezone(BOTSWANA_TZ)
-                    match_date = dt.strftime("%d %b")
-                except Exception:
-                    match_date = raw_date[:10]
+    games = []
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-            this_lname = None
-            note = comp.get("altGameNote") or ""
-            if note:
-                this_lname = clean_league_name(note)
-            if not this_lname and data.get("leagues") and data["leagues"][0].get("name"):
-                this_lname = data["leagues"][0]["name"]
-            if not this_lname:
-                this_lname = "Football"
-            this_lname = clean_league_name(this_lname)
-            this_country, this_flag = classify_country(this_lname)
+    def fetch_one(url):
+        data = get_json(url)
+        fallback = None
+        for code, name in priority:
+            if f"/{code}/" in url:
+                fallback = name
+                break
+        return _parse_events(data, fallback)
 
-            games.append({
-                "league": this_lname,
-                "leagueName": this_lname,
-                "country": this_country,
-                "flag": this_flag,
-                "home": (home.get("team", {}).get("displayName") or "Home")[:40],
-                "away": (away.get("team", {}).get("displayName") or "Away")[:40],
-                "score": score,
-                "live": cat == "live",
-                "status": cat,
-                "statusDetail": st_type.get("description") or score,
-                "date": match_date,
-                "homeScore": home.get("score"),
-                "awayScore": away.get("score"),
-            })
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = [pool.submit(fetch_one, u) for u in urls]
+        for fut in as_completed(futures, timeout=18):
+            try:
+                games.extend(fut.result())
+            except Exception:
+                pass
 
     # Deduplicate
     seen = set()
@@ -665,8 +618,14 @@ def fetch_espn():
             seen.add(k)
             out.append(g)
 
-    print(f"Final games: {len(out)}  (pre={sum(1 for g in out if g['status']=='pre')} live={sum(1 for g in out if g['status']=='live')} post={sum(1 for g in out if g['status']=='post')})")
-    cache_set("games", out)
+    print(
+        f"Final games: {len(out)}  "
+        f"(pre={sum(1 for g in out if g['status']=='pre')} "
+        f"live={sum(1 for g in out if g['status']=='live')} "
+        f"post={sum(1 for g in out if g['status']=='post')})"
+    )
+    if out:
+        cache_set("games", out)
     return out
 
 # ---------------------------------------------------------------------------
@@ -1121,19 +1080,34 @@ function openP(h, a, uid) {
     });
 }
 
-fetch("/api/games")
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    allGames = data.games || [];
-    render();
-    if (data.error && allGames.length === 0) {
-      document.getElementById("loader").innerHTML = "<div class='error'>" + escapeHtml(data.error) + "</div>";
-      document.getElementById("loader").style.display = "block";
+(function() {
+  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var timer = setTimeout(function() {
+    if (ctrl) ctrl.abort();
+    var el = document.getElementById("loader");
+    if (el && el.style.display !== "none") {
+      el.innerHTML = "<div class='error'>Loading timed out. Pull to refresh or try again in a minute (server may be waking up).</div>";
     }
-  })
-  .catch(function() {
-    document.getElementById("loader").innerHTML = "<div class='error'>Failed to load fixtures</div>";
-  });
+  }, 25000);
+  fetch("/api/games", ctrl ? { signal: ctrl.signal } : undefined)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      clearTimeout(timer);
+      allGames = data.games || [];
+      render();
+      if (data.error && allGames.length === 0) {
+        document.getElementById("loader").innerHTML = "<div class='error'>" + escapeHtml(data.error) + "</div>";
+        document.getElementById("loader").style.display = "block";
+      }
+    })
+    .catch(function(err) {
+      clearTimeout(timer);
+      var msg = (err && err.name === "AbortError")
+        ? "Loading timed out. Server may be cold-starting — wait 30s and refresh."
+        : "Failed to load fixtures. Check connection and refresh.";
+      document.getElementById("loader").innerHTML = "<div class='error'>" + msg + "</div>";
+    });
+})();
 </script>
 </body>
 </html>"""
